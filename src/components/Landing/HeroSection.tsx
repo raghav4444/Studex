@@ -1,5 +1,5 @@
-import React from 'react';
-import { BookOpen, Shield, Users, ArrowRight, Play } from 'lucide-react';
+import React from "react";
+import { BookOpen, Shield, Users, ArrowRight, Play } from "lucide-react";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -15,14 +15,34 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
             <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">CampusLink</span>
+            <span className="text-xl font-bold text-white">Studex</span>
           </div>
-          
+
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-300 hover:text-white transition-colors">Features</a>
-            <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">How it Works</a>
-            <a href="#about" className="text-gray-300 hover:text-white transition-colors">About</a>
-            <a href="#faq" className="text-gray-300 hover:text-white transition-colors">FAQ</a>
+            <a
+              href="#features"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              How it Works
+            </a>
+            <a
+              href="#about"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              About
+            </a>
+            <a
+              href="#faq"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              FAQ
+            </a>
           </div>
 
           <button
@@ -42,18 +62,24 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
               <div className="flex items-center space-x-2 mb-6">
                 <div className="flex items-center space-x-1 bg-blue-500/20 px-3 py-1 rounded-full border border-blue-500/30">
                   <Shield className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm text-blue-300 font-medium">Verified Students Only</span>
+                  <span className="text-sm text-blue-300 font-medium">
+                    Verified Students Only
+                  </span>
                 </div>
               </div>
 
               <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                 The Student-Only
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500"> Network</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                  {" "}
+                  Network
+                </span>
               </h1>
 
               <p className="text-xl text-gray-400 mb-8 leading-relaxed">
-                Verified. Trusted. Built for students to connect, learn & grow together. 
-                Share notes, find mentors, and build your network with confidence.
+                Verified. Trusted. Built for students to connect, learn & grow
+                together. Share notes, find mentors, and build your network with
+                confidence.
               </p>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
@@ -93,7 +119,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
                   <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                     <BookOpen className="w-5 h-5 text-white" />
                   </div>
-                  <span className="font-semibold text-white">CampusLink Dashboard</span>
+                  <span className="font-semibold text-white">
+                    Studex Dashboard
+                  </span>
                 </div>
 
                 <div className="space-y-4">
@@ -103,9 +131,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
                     </div>
                     <div>
                       <p className="text-white font-medium">Sarah Chen</p>
-                      <p className="text-sm text-gray-400">MIT • Computer Science</p>
+                      <p className="text-sm text-gray-400">
+                        MIT • Computer Science
+                      </p>
                     </div>
-                    <div className="ml-auto text-green-400 text-sm">Verified</div>
+                    <div className="ml-auto text-green-400 text-sm">
+                      Verified
+                    </div>
                   </div>
 
                   <div className="flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700">
@@ -121,7 +153,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
 
                   <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
                     <p className="text-blue-300 text-sm">
-                      "Just shared my Data Structures notes - hope this helps with your upcoming exam!"
+                      "Just shared my Data Structures notes - hope this helps
+                      with your upcoming exam!"
                     </p>
                   </div>
                 </div>
@@ -137,10 +170,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
 
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
-          backgroundSize: '20px 20px'
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+            backgroundSize: "20px 20px",
+          }}
+        ></div>
       </div>
     </section>
   );

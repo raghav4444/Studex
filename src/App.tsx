@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 bg-blue-500 rounded-lg animate-pulse mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading CampusLink...</p>
+          <p className="text-gray-400">Loading Studex...</p>
         </div>
       </div>
     );
@@ -53,7 +53,7 @@ const AppContent: React.FC = () => {
           <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
             <div className="text-center">
               <div className="w-8 h-8 bg-blue-500 rounded-lg animate-pulse mx-auto mb-4"></div>
-              <p className="text-gray-400">Loading CampusLink...</p>
+              <p className="text-gray-400">Loading Studex...</p>
             </div>
           </div>
         }

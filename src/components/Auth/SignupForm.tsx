@@ -144,9 +144,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
     <div className="w-full max-w-md mx-auto">
       <div className="bg-[#161b22] rounded-lg p-8 border border-gray-800">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-white mb-2">
-            Join CampusLink
-          </h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Join Studex</h2>
           <p className="text-gray-400">
             Connect with students from your college
           </p>
