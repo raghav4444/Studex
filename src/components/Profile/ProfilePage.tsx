@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  CreditCard as Edit, 
+  Edit3,
   Shield, 
   Eye, 
   EyeOff, 
@@ -9,576 +9,818 @@ import {
   Award, 
   Calendar, 
   Users, 
-  TrendingUp,
-  Heart,
-  ThumbsUp,
-  Star,
-  Zap,
-  Target,
   Activity,
-  Clock,
-  Filter,
-  MoreHorizontal,
-  ExternalLink,
+  MapPin,
+  GraduationCap,
+  Building,
+  Github,
+  Linkedin,
+  Globe,
+  Mail,
+  LogOut,
+  Camera,
+  Upload,
   ChevronRight,
   BarChart3,
-  UserPlus,
-  Bookmark,
-  Share2,
-  Settings,
-  Bell,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Info
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../AuthProvider';
 
+interface ProfileData {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  bio: string;
+  college: string;
+  department: string;
+  year: string;
+  location?: string;
+  skills: string[];
+  profilePhoto?: string;
+  coverPhoto?: string;
+  isVerified: boolean;
+  isAnonymous: boolean;
+  socialLinks: {
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+  };
+  privacySettings: {
+    showRealName: boolean;
+    showCollegeInfo: boolean;
+    allowDirectMessages: boolean;
+  };
+  stats: {
+    posts: number;
+    followers: number;
+    following: number;
+    studyHours: number;
+  };
+}
+
 const ProfilePage: React.FC = () => {
-  const { user, signOut, updateProfile } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isAnonymous, setIsAnonymous] = useState(user?.isAnonymous || false);
-  const [editForm, setEditForm] = useState({
-    name: user?.name || '',
-    bio: user?.bio || '',
-    skills: user?.skills || [],
+  const { user, signOut } = useAuth();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [activeTab, setActiveTab] = useState<'posts' | 'groups' | 'events' | 'activity'>('posts');
+  const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+  
+  // Mock profile data - in real app, this would come from backend
+  const [profileData, setProfileData] = useState<ProfileData>({
+    id: user?.id || '1',
+    name: user?.name || 'Alex Johnson',
+    username: 'alexjohnson24',
+    email: user?.email || 'alex.johnson@university.edu',
+    bio: 'Computer Science student passionate about AI and machine learning. Love to share knowledge and help fellow students succeed.',
+    college: 'Massachusetts Institute of Technology',
+    department: 'Computer Science',
+    year: '3rd Year',
+    location: 'Cambridge, MA',
+    skills: ['JavaScript', 'Python', 'React', 'Machine Learning', 'Data Science', 'Algorithm Design'],
+    profilePhoto: undefined,
+    coverPhoto: undefined,
+    isVerified: true,
+    isAnonymous: user?.isAnonymous || false,
+    socialLinks: {
+      linkedin: 'https://linkedin.com/in/alexjohnson',
+      github: 'https://github.com/alexjohnson',
+      portfolio: 'https://alexjohnson.dev'
+    },
+    privacySettings: {
+      showRealName: true,
+      showCollegeInfo: true,
+      allowDirectMessages: true
+    },
+    stats: {
+      posts: 127,
+      followers: 842,
+      following: 324,
+      studyHours: 156
+    }
   });
-  const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'trending' | 'stats'>('overview');
-  const [showSettings, setShowSettings] = useState(false);
+
+  // Calculate profile completion
+  const calculateProfileCompletion = (): number => {
+    const fields = [
+      profileData.name,
+      profileData.bio,
+      profileData.college,
+      profileData.department,
+      profileData.year,
+      profileData.skills.length > 0,
+      profileData.profilePhoto,
+      Object.keys(profileData.socialLinks).some(key => profileData.socialLinks[key as keyof typeof profileData.socialLinks])
+    ];
+    const completedFields = fields.filter(Boolean).length;
+    return Math.round((completedFields / fields.length) * 100);
+  };
+
+  const handleAnonymousToggle = async () => {
+    const newAnonymousState = !profileData.isAnonymous;
+    setProfileData(prev => ({
+      ...prev,
+      isAnonymous: newAnonymousState
+    }));
+    // In real app, update backend here
+  };
+
+  const handlePrivacySettingChange = (setting: keyof ProfileData['privacySettings'], value: boolean) => {
+    setProfileData(prev => ({
+      ...prev,
+      privacySettings: {
+        ...prev.privacySettings,
+        [setting]: value
+      }
+    }));
+  };
 
   if (!user) return null;
 
-  const handleSaveProfile = async () => {
-    try {
-      await updateProfile({
-        name: editForm.name,
-        bio: editForm.bio,
-        skills: editForm.skills,
-        isAnonymous,
-      });
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Failed to sign out:', error);
-    }
-  };
-
-  // Enhanced stats with more detailed metrics
-  const [stats] = useState({
-    posts: 12,
-    notes: 5,
-    mentorship: 3,
-    events: 8,
-    likes: 247,
-    comments: 89,
-    followers: 156,
-    following: 98,
-    studyHours: 42.5,
-    achievements: 7
-  });
-
-  // Trending topics data
-  const [trendingTopics] = useState([
-    { 
-      name: '#ExamPrep2024', 
-      posts: 45, 
-      trending: true, 
-      category: 'Study',
-      engagement: 'high',
-      yourPosts: 2
-    },
-    { 
-      name: '#StudyGroup', 
-      posts: 32, 
-      trending: false, 
-      category: 'Community',
-      engagement: 'medium',
-      yourPosts: 1
-    },
-    { 
-      name: '#InternshipTips', 
-      posts: 28, 
-      trending: true, 
-      category: 'Career',
-      engagement: 'high',
-      yourPosts: 0
-    },
-    { 
-      name: '#ProjectHelp', 
-      posts: 19, 
-      trending: false, 
-      category: 'Academic',
-      engagement: 'medium',
-      yourPosts: 3
-    },
-    { 
-      name: '#CareerAdvice', 
-      posts: 15, 
-      trending: false, 
-      category: 'Career',
-      engagement: 'low',
-      yourPosts: 1
-    }
-  ]);
-
-  // Enhanced recent activity
-  const [recentActivity] = useState([
-    { 
-      type: 'post', 
-      action: 'shared a post', 
-      content: 'Study tips for finals week', 
-      time: '2m ago', 
-      icon: MessageSquare, 
-      color: 'blue',
-      likes: 12,
-      comments: 3
-    },
-    { 
-      type: 'note', 
-      action: 'uploaded notes', 
-      content: 'Linear Algebra - Chapter 5', 
-      time: '1h ago', 
-      icon: BookOpen, 
-      color: 'green',
-      downloads: 8
-    },
-    { 
-      type: 'like', 
-      action: 'liked a post', 
-      content: 'Sarah Chen\'s study schedule', 
-      time: '2h ago', 
-      icon: Heart, 
-      color: 'red'
-    },
-    { 
-      type: 'comment', 
-      action: 'commented on', 
-      content: 'Mike Johnson\'s project showcase', 
-      time: '3h ago', 
-      icon: MessageSquare, 
-      color: 'blue'
-    },
-    { 
-      type: 'follow', 
-      action: 'started following', 
-      content: 'Alex Kumar', 
-      time: '5h ago', 
-      icon: UserPlus, 
-      color: 'green'
-    },
-    { 
-      type: 'achievement', 
-      action: 'earned badge', 
-      content: 'Helpful Contributor', 
-      time: '1d ago', 
-      icon: Award, 
-      color: 'yellow'
-    },
-    { 
-      type: 'event', 
-      action: 'attended event', 
-      content: 'Study Group Meeting', 
-      time: '2d ago', 
-      icon: Calendar, 
-      color: 'purple'
-    }
-  ]);
-
-  // Community stats
-  const [communityStats] = useState({
-    totalPosts: 1247,
-    activeUsers: 89,
-    studyGroups: 15,
-    events: 23,
-    mentorshipConnections: 45,
-    notesShared: 234,
-    totalLikes: 5678,
-    totalComments: 1234
-  });
-
-  const achievements = [
-    { title: 'Knowledge Sharer', description: 'Uploaded 5+ notes', icon: BookOpen, color: 'blue' },
-    { title: 'Community Helper', description: 'Helped 10+ students', icon: Users, color: 'green' },
-    { title: 'Active Learner', description: 'Attended 5+ events', icon: Calendar, color: 'purple' },
-    { title: 'Rising Star', description: 'Top contributor this month', icon: TrendingUp, color: 'yellow' },
-  ];
-
-  const getAchievementColor = (color: string) => {
-    const colors = {
-      blue: 'bg-blue-500/20 text-blue-400',
-      green: 'bg-green-500/20 text-green-400',
-      purple: 'bg-purple-500/20 text-purple-400',
-      yellow: 'bg-yellow-500/20 text-yellow-400'
-    };
-    return colors[color as keyof typeof colors] || colors.blue;
-  };
-
-  const getActivityColor = (color: string) => {
-    const colors = {
-      blue: 'bg-blue-500/20 text-blue-400',
-      green: 'bg-green-500/20 text-green-400',
-      red: 'bg-red-500/20 text-red-400',
-      purple: 'bg-purple-500/20 text-purple-400',
-      yellow: 'bg-yellow-500/20 text-yellow-400'
-    };
-    return colors[color as keyof typeof colors] || colors.blue;
-  };
-
-  const getEngagementColor = (engagement: string) => {
-    switch (engagement) {
-      case 'high': return 'text-green-400 bg-green-500/20';
-      case 'medium': return 'text-yellow-400 bg-yellow-500/20';
-      case 'low': return 'text-gray-400 bg-gray-500/20';
-      default: return 'text-gray-400 bg-gray-500/20';
-    }
-  };
-
-  const formatTimeAgo = (time: string) => {
-    return time; // Already formatted in mock data
-  };
+  const completionPercentage = calculateProfileCompletion();
+  const displayName = profileData.isAnonymous ? 'Anonymous User' : profileData.name;
+  const displayPhoto = profileData.isAnonymous ? undefined : profileData.profilePhoto;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      {/* Profile Header - Instagram Style */}
-      <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 mb-6">
-        <div className="flex flex-col md:flex-row md:items-start md:space-x-8">
-          {/* Profile Picture */}
-          <div className="flex flex-col items-center md:items-start mb-6 md:mb-0">
-            <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-4xl mb-4 border-4 border-gray-800">
-              {user.name.charAt(0).toUpperCase()}
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Header Section with Anonymous Toggle */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Profile</h1>
+          {profileData.isVerified && !profileData.isAnonymous && (
+            <div className="flex items-center space-x-1 bg-blue-500/20 px-2 py-1 rounded-full">
+              <Shield className="w-4 h-4 text-blue-400" />
+              <span className="text-xs text-blue-300 font-medium">Verified</span>
             </div>
-            
-            <div className="flex items-center space-x-2 mb-2">
-              <button
-                onClick={() => setIsAnonymous(!isAnonymous)}
-                className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm transition-all ${
-                  isAnonymous 
-                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
-                    : 'bg-gray-700 text-gray-300 border border-gray-600'
-                }`}
-              >
-                {isAnonymous ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                <span>{isAnonymous ? 'Anonymous' : 'Public'}</span>
-              </button>
+          )}
+        </div>
+        
+        {/* Anonymous Mode Toggle - Moved to header */}
+        <button
+          onClick={handleAnonymousToggle}
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all duration-200 ${
+            profileData.isAnonymous 
+              ? 'bg-orange-500/20 border-orange-500/30 text-orange-300 hover:bg-orange-500/30' 
+              : 'bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white'
+          }`}
+        >
+          {profileData.isAnonymous ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          <span className="text-sm font-medium">
+            {profileData.isAnonymous ? 'Anonymous On' : 'Anonymous Off'}
+          </span>
+        </button>
+      </div>
+
+      {/* Main Profile Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Profile Info */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Profile Header Card */}
+          <div className="bg-[#161b22] rounded-xl border border-gray-800 p-6">
+            <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6">
+              {/* Profile Picture */}
+              <div className="relative">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-2xl sm:text-3xl border-4 border-gray-700">
+                  {displayPhoto ? (
+                    <img 
+                      src={displayPhoto} 
+                      alt="Profile" 
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    displayName.charAt(0).toUpperCase()
+                  )}
+                </div>
+                {profileData.isVerified && !profileData.isAnonymous && (
+                  <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center border-2 border-[#161b22]">
+                    <Shield className="w-4 h-4 text-white" />
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                      {displayName}
+                    </h2>
+                    {!profileData.isAnonymous && (
+                      <p className="text-gray-400">@{profileData.username}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 mt-3 sm:mt-0">
+                    <button
+                      onClick={() => setIsEditMode(true)}
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      <span>Edit Profile</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowPrivacySettings(!showPrivacySettings)}
+                      className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                      <Settings className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                {!profileData.isAnonymous && profileData.bio && (
+                  <p className="text-gray-300 mb-4 leading-relaxed">{profileData.bio}</p>
+                )}
+
+                {/* Profile Details */}
+                {!profileData.isAnonymous && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center space-x-2 text-gray-400">
+                      <GraduationCap className="w-4 h-4" />
+                      <span>{profileData.department}, {profileData.year}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-gray-400">
+                      <Building className="w-4 h-4" />
+                      <span>{profileData.college}</span>
+                    </div>
+                    {profileData.location && (
+                      <div className="flex items-center space-x-2 text-gray-400">
+                        <MapPin className="w-4 h-4" />
+                        <span>{profileData.location}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center space-x-2 text-gray-400">
+                      <Mail className="w-4 h-4" />
+                      <span>{profileData.email}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Links */}
+                {!profileData.isAnonymous && Object.values(profileData.socialLinks).some(Boolean) && (
+                  <div className="flex items-center space-x-3 mt-4">
+                    {profileData.socialLinks.linkedin && (
+                      <a
+                        href={profileData.socialLinks.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-800 rounded-lg transition-colors"
+                      >
+                        <Linkedin className="w-5 h-5" />
+                      </a>
+                    )}
+                    {profileData.socialLinks.github && (
+                      <a
+                        href={profileData.socialLinks.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                      >
+                        <Github className="w-5 h-5" />
+                      </a>
+                    )}
+                    {profileData.socialLinks.portfolio && (
+                      <a
+                        href={profileData.socialLinks.portfolio}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-800 rounded-lg transition-colors"
+                      >
+                        <Globe className="w-5 h-5" />
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Skills Tags */}
+            {!profileData.isAnonymous && profileData.skills.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-gray-700">
+                <h3 className="text-sm font-medium text-gray-400 mb-3">Skills & Interests</h3>
+                <div className="flex flex-wrap gap-2">
+                  {profileData.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full border border-blue-500/30"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Profile Info */}
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start space-x-3 mb-4">
-              <h1 className="text-3xl font-bold text-white">{user.name}</h1>
-              {user.isVerified && (
-                <div className="flex items-center space-x-1 bg-blue-500/20 px-2 py-1 rounded-full">
-                  <Shield className="w-4 h-4 text-blue-400" />
-                  <span className="text-xs text-blue-300 font-medium">Verified</span>
+          {/* Privacy Settings Modal */}
+          {showPrivacySettings && (
+            <div className="bg-[#161b22] rounded-xl border border-gray-800 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Privacy Settings</h3>
+                <button
+                  onClick={() => setShowPrivacySettings(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-medium">Show real name on posts</p>
+                    <p className="text-sm text-gray-400">Display your actual name instead of username</p>
+                  </div>
+                  <button
+                    onClick={() => handlePrivacySettingChange('showRealName', !profileData.privacySettings.showRealName)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      profileData.privacySettings.showRealName ? 'bg-blue-500' : 'bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        profileData.privacySettings.showRealName ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-medium">Show college info publicly</p>
+                    <p className="text-sm text-gray-400">Make your college and department visible</p>
+                  </div>
+                  <button
+                    onClick={() => handlePrivacySettingChange('showCollegeInfo', !profileData.privacySettings.showCollegeInfo)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      profileData.privacySettings.showCollegeInfo ? 'bg-blue-500' : 'bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        profileData.privacySettings.showCollegeInfo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-medium">Allow direct messages</p>
+                    <p className="text-sm text-gray-400">Let other users send you private messages</p>
+                  </div>
+                  <button
+                    onClick={() => handlePrivacySettingChange('allowDirectMessages', !profileData.privacySettings.allowDirectMessages)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      profileData.privacySettings.allowDirectMessages ? 'bg-blue-500' : 'bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        profileData.privacySettings.allowDirectMessages ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Content Tabs */}
+          <div className="bg-[#161b22] rounded-xl border border-gray-800">
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-700">
+              <nav className="flex space-x-1 p-1">
+                {[
+                  { id: 'posts', label: 'My Posts', icon: MessageSquare },
+                  { id: 'groups', label: 'Groups', icon: Users },
+                  { id: 'events', label: 'Events', icon: Calendar },
+                  { id: 'activity', label: 'Activity', icon: Activity }
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                      className={`flex items-center space-x-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === tab.id
+                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-6">
+              {activeTab === 'posts' && (
+                <div className="text-center py-12">
+                  <MessageSquare className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">No posts yet</h3>
+                  <p className="text-gray-400">Share your first post to get started!</p>
+                </div>
+              )}
+              
+              {activeTab === 'groups' && (
+                <div className="text-center py-12">
+                  <Users className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">No groups joined</h3>
+                  <p className="text-gray-400">Join study groups to collaborate with peers!</p>
+                </div>
+              )}
+              
+              {activeTab === 'events' && (
+                <div className="text-center py-12">
+                  <Calendar className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">No events</h3>
+                  <p className="text-gray-400">Create or join events to expand your network!</p>
+                </div>
+              )}
+              
+              {activeTab === 'activity' && (
+                <div className="text-center py-12">
+                  <Activity className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">No recent activity</h3>
+                  <p className="text-gray-400">Start engaging with the community!</p>
                 </div>
               )}
             </div>
-            
-            <div className="space-y-1 text-gray-400 mb-4">
-              <p className="text-lg">{user.branch} • {user.year}th Year</p>
-              <p>{user.college}</p>
-            </div>
-
-            <p className="text-gray-300 mb-6 max-w-md">{user.bio || 'No bio added yet.'}</p>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center space-x-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 font-medium"
-              >
-                <Edit className="w-4 h-4" />
-                <span>Edit Profile</span>
-              </button>
-              
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="flex items-center space-x-2 px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all duration-200"
-              >
-                <Settings className="w-4 h-4" />
-                <span>Settings</span>
-              </button>
-            </div>
           </div>
         </div>
-      </div>
 
-      {/* Instagram-style Stats */}
-      <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 mb-6">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{stats.posts}</div>
-            <div className="text-sm text-gray-400">Posts</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{stats.followers}</div>
-            <div className="text-sm text-gray-400">Followers</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{stats.following}</div>
-            <div className="text-sm text-gray-400">Following</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{stats.likes}</div>
-            <div className="text-sm text-gray-400">Likes</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{stats.achievements}</div>
-            <div className="text-sm text-gray-400">Badges</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="bg-[#161b22] rounded-lg border border-gray-800 mb-6">
-        <div className="flex items-center space-x-1 p-1">
-          {[
-            { key: 'overview', label: 'Overview', icon: Activity },
-            { key: 'activity', label: 'Activity', icon: Clock },
-            { key: 'trending', label: 'Trending', icon: TrendingUp },
-            { key: 'stats', label: 'Stats', icon: BarChart3 }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
-                className={`flex items-center space-x-2 px-4 py-3 rounded-md transition-all duration-200 ${
-                  activeTab === tab.key
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="font-medium">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Tab Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {activeTab === 'overview' && (
-            <>
-              {/* Achievements */}
-              <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-                  <Award className="w-5 h-5 text-yellow-400" />
-                  <span>Achievements</span>
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {achievements.map((achievement, index) => {
-                    const Icon = achievement.icon;
-                    return (
-                      <div key={index} className="flex items-center space-x-4 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-gray-600 transition-colors">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getAchievementColor(achievement.color)}`}>
-                          <Icon className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-white">{achievement.title}</h4>
-                          <p className="text-sm text-gray-400">{achievement.description}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'activity' && (
-            <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-                <Clock className="w-5 h-5 text-blue-400" />
-                <span>Recent Activity</span>
-              </h3>
-              
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => {
-                  const Icon = activity.icon;
-                  return (
-                    <div key={index} className="flex items-start space-x-4 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-gray-600 transition-colors">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getActivityColor(activity.color)}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-white">
-                          <span className="font-medium">You</span> {activity.action} <span className="font-medium">"{activity.content}"</span>
-                        </p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-sm text-gray-400">{activity.time}</span>
-                          {activity.likes && (
-                            <div className="flex items-center space-x-1 text-sm text-gray-400">
-                              <Heart className="w-3 h-3" />
-                              <span>{activity.likes}</span>
-                            </div>
-                          )}
-                          {activity.comments && (
-                            <div className="flex items-center space-x-1 text-sm text-gray-400">
-                              <MessageSquare className="w-3 h-3" />
-                              <span>{activity.comments}</span>
-                            </div>
-                          )}
-                          {activity.downloads && (
-                            <div className="flex items-center space-x-1 text-sm text-gray-400">
-                              <BookOpen className="w-3 h-3" />
-                              <span>{activity.downloads} downloads</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'trending' && (
-            <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                <span>Trending Topics</span>
-              </h3>
-              
-              <div className="space-y-4">
-                {trendingTopics.map((topic, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-gray-600 transition-colors">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-blue-400 font-medium">{topic.name}</span>
-                        {topic.trending && <Zap className="w-4 h-4 text-yellow-400" />}
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs ${getEngagementColor(topic.engagement)}`}>
-                        {topic.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="text-sm text-white">{topic.posts} posts</div>
-                        {topic.yourPosts > 0 && (
-                          <div className="text-xs text-blue-400">{topic.yourPosts} yours</div>
-                        )}
-                      </div>
-                      <button className="p-2 text-gray-400 hover:text-white transition-colors">
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'stats' && (
-            <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-                <BarChart3 className="w-5 h-5 text-purple-400" />
-                <span>Detailed Stats</span>
-              </h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-[#0d1117] rounded-lg border border-gray-700">
-                  <div className="text-2xl font-bold text-white">{stats.posts}</div>
-                  <div className="text-sm text-gray-400">Posts Shared</div>
-                </div>
-                <div className="p-4 bg-[#0d1117] rounded-lg border border-gray-700">
-                  <div className="text-2xl font-bold text-white">{stats.notes}</div>
-                  <div className="text-sm text-gray-400">Notes Uploaded</div>
-                </div>
-                <div className="p-4 bg-[#0d1117] rounded-lg border border-gray-700">
-                  <div className="text-2xl font-bold text-white">{stats.likes}</div>
-                  <div className="text-sm text-gray-400">Likes Received</div>
-                </div>
-                <div className="p-4 bg-[#0d1117] rounded-lg border border-gray-700">
-                  <div className="text-2xl font-bold text-white">{stats.comments}</div>
-                  <div className="text-sm text-gray-400">Comments</div>
-                </div>
-                <div className="p-4 bg-[#0d1117] rounded-lg border border-gray-700">
-                  <div className="text-2xl font-bold text-white">{stats.studyHours}h</div>
-                  <div className="text-sm text-gray-400">Study Hours</div>
-                </div>
-                <div className="p-4 bg-[#0d1117] rounded-lg border border-gray-700">
-                  <div className="text-2xl font-bold text-white">{stats.achievements}</div>
-                  <div className="text-sm text-gray-400">Achievements</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar */}
+        {/* Right Column - Stats & Actions */}
         <div className="space-y-6">
-          {/* Community Stats */}
-          <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-              <Target className="w-5 h-5 text-orange-400" />
-              <span>Community Stats</span>
-            </h3>
+          {/* Profile Completion */}
+          <div className="bg-[#161b22] rounded-xl border border-gray-800 p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-white">Profile Completion</h3>
+              <span className="text-sm font-medium text-blue-400">{completionPercentage}%</span>
+            </div>
             
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Total Posts</span>
-                <span className="text-white font-medium">{communityStats.totalPosts.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Active Users</span>
-                <span className="text-white font-medium">{communityStats.activeUsers}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Study Groups</span>
-                <span className="text-white font-medium">{communityStats.studyGroups}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Events</span>
-                <span className="text-white font-medium">{communityStats.events}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Mentorship</span>
-                <span className="text-white font-medium">{communityStats.mentorshipConnections}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Notes Shared</span>
-                <span className="text-white font-medium">{communityStats.notesShared}</span>
-              </div>
+            <div className="w-full bg-gray-700 rounded-full h-2 mb-4">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${completionPercentage}%` }}
+              ></div>
+            </div>
+            
+            <p className="text-sm text-gray-400">
+              Complete your profile to improve visibility and connect with more students!
+            </p>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[#161b22] rounded-xl border border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-white mb-1">{profileData.stats.posts}</div>
+              <div className="text-sm text-gray-400">Posts</div>
+            </div>
+            <div className="bg-[#161b22] rounded-xl border border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-white mb-1">{profileData.stats.followers}</div>
+              <div className="text-sm text-gray-400">Followers</div>
+            </div>
+            <div className="bg-[#161b22] rounded-xl border border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-white mb-1">{profileData.stats.following}</div>
+              <div className="text-sm text-gray-400">Following</div>
+            </div>
+            <div className="bg-[#161b22] rounded-xl border border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-white mb-1">{profileData.stats.studyHours}h</div>
+              <div className="text-sm text-gray-400">Study Time</div>
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
+          <div className="bg-[#161b22] rounded-xl border border-gray-800 p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-            
             <div className="space-y-3">
-              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-blue-500 transition-colors">
+              <button className="w-full flex items-center space-x-3 p-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
                 <BookOpen className="w-5 h-5 text-blue-400" />
-                <span className="text-white">Share Notes</span>
+                <span>View My Notes</span>
+                <ChevronRight className="w-4 h-4 ml-auto" />
               </button>
-              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-green-500 transition-colors">
-                <Users className="w-5 h-5 text-green-400" />
-                <span className="text-white">Create Study Group</span>
+              
+              <button className="w-full flex items-center space-x-3 p-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                <Award className="w-5 h-5 text-yellow-400" />
+                <span>Achievements</span>
+                <ChevronRight className="w-4 h-4 ml-auto" />
               </button>
-              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-purple-500 transition-colors">
-                <Calendar className="w-5 h-5 text-purple-400" />
-                <span className="text-white">Add Event</span>
+              
+              <button className="w-full flex items-center space-x-3 p-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                <BarChart3 className="w-5 h-5 text-green-400" />
+                <span>Analytics</span>
+                <ChevronRight className="w-4 h-4 ml-auto" />
               </button>
-              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
-                <Award className="w-5 h-5 text-orange-400" />
-                <span className="text-white">View Achievements</span>
+              
+              <button 
+                onClick={signOut}
+                className="w-full flex items-center space-x-3 p-3 text-left text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Sign Out</span>
+                <ChevronRight className="w-4 h-4 ml-auto" />
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Edit Profile Modal */}
+      {isEditMode && (
+        <EditProfileModal 
+          profileData={profileData}
+          setProfileData={setProfileData}
+          onClose={() => setIsEditMode(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Edit Profile Modal Component
+interface EditProfileModalProps {
+  profileData: ProfileData;
+  setProfileData: React.Dispatch<React.SetStateAction<ProfileData>>;
+  onClose: () => void;
+}
+
+const EditProfileModal: React.FC<EditProfileModalProps> = ({ profileData, setProfileData, onClose }) => {
+  const [editForm, setEditForm] = useState({
+    name: profileData.name,
+    username: profileData.username,
+    bio: profileData.bio,
+    college: profileData.college,
+    department: profileData.department,
+    year: profileData.year,
+    location: profileData.location || '',
+    skills: profileData.skills.join(', '),
+    linkedin: profileData.socialLinks.linkedin || '',
+    github: profileData.socialLinks.github || '',
+    portfolio: profileData.socialLinks.portfolio || ''
+  });
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+
+  const handleInputChange = (field: string, value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewPhoto(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const updatedProfile: ProfileData = {
+        ...profileData,
+        name: editForm.name,
+        username: editForm.username,
+        bio: editForm.bio,
+        college: editForm.college,
+        department: editForm.department,
+        year: editForm.year,
+        location: editForm.location,
+        skills: editForm.skills.split(',').map(skill => skill.trim()).filter(Boolean),
+        profilePhoto: previewPhoto || profileData.profilePhoto,
+        socialLinks: {
+          linkedin: editForm.linkedin,
+          github: editForm.github,
+          portfolio: editForm.portfolio
+        }
+      };
+      
+      setProfileData(updatedProfile);
+      onClose();
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-[#161b22] rounded-xl border border-gray-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-white">Edit Profile</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Profile Photo Upload */}
+          <div className="flex items-center space-x-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl overflow-hidden">
+              {previewPhoto || profileData.profilePhoto ? (
+                <img 
+                  src={previewPhoto || profileData.profilePhoto} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                profileData.name.charAt(0).toUpperCase()
+              )}
+            </div>
+            <div>
+              <label className="cursor-pointer flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                <Camera className="w-4 h-4" />
+                <span>Change Photo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+              </label>
+              <p className="text-xs text-gray-400 mt-1">JPG, PNG or GIF. Max 5MB.</p>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+              <input
+                type="text"
+                value={editForm.username}
+                onChange={(e) => handleInputChange('username', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Bio</label>
+            <textarea
+              value={editForm.bio}
+              onChange={(e) => handleInputChange('bio', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none resize-none"
+              placeholder="Tell us about yourself..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">College</label>
+              <input
+                type="text"
+                value={editForm.college}
+                onChange={(e) => handleInputChange('college', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Department</label>
+              <input
+                type="text"
+                value={editForm.department}
+                onChange={(e) => handleInputChange('department', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Year</label>
+              <select
+                value={editForm.year}
+                onChange={(e) => handleInputChange('year', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+              >
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+                <option value="Graduate">Graduate</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+              <input
+                type="text"
+                value={editForm.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                placeholder="City, State"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Skills (comma-separated)</label>
+            <input
+              type="text"
+              value={editForm.skills}
+              onChange={(e) => handleInputChange('skills', e.target.value)}
+              className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+              placeholder="JavaScript, Python, React, Machine Learning..."
+            />
+          </div>
+
+          {/* Social Links */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-white">Social Links</h3>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">LinkedIn</label>
+              <input
+                type="url"
+                value={editForm.linkedin}
+                onChange={(e) => handleInputChange('linkedin', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                placeholder="https://linkedin.com/in/yourname"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">GitHub</label>
+              <input
+                type="url"
+                value={editForm.github}
+                onChange={(e) => handleInputChange('github', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                placeholder="https://github.com/yourname"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Portfolio</label>
+              <input
+                type="url"
+                value={editForm.portfolio}
+                onChange={(e) => handleInputChange('portfolio', e.target.value)}
+                className="w-full px-3 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                placeholder="https://yourportfolio.com"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-700">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isLoading}
+            className="flex items-center space-x-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white rounded-lg transition-colors font-medium"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4" />
+                <span>Save Changes</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

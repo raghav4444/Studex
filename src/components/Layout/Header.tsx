@@ -72,14 +72,19 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-all duration-300 backdrop-blur-sm ${
+                  className={`relative px-4 py-2 rounded-lg flex items-center space-x-2 transition-all duration-300 backdrop-blur-sm border border-transparent nav-button hover-stable ${
                     activeTab === tab.id
-                      ? "bg-blue-500/20 text-white shadow-lg shadow-blue-500/20 backdrop-blur-xl border border-blue-400/30 ring-1 ring-blue-300/20"
-                      : "text-gray-400 hover:text-white hover:bg-[#161b22]/80 hover:backdrop-blur-xl hover:border hover:border-gray-600/30"
+                      ? "bg-blue-500/20 text-white shadow-lg shadow-blue-500/20 backdrop-blur-xl border-blue-400/30 ring-1 ring-blue-300/20"
+                      : "text-gray-400 hover:text-white hover:bg-[#161b22]/80 hover:backdrop-blur-xl hover:border-gray-600/30 hover:shadow-md hover:transform hover:scale-105"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{tab.label}</span>
+                  <Icon className="w-4 h-4 transition-transform duration-300 hover:scale-110" />
+                  <span className="text-sm font-medium whitespace-nowrap">{tab.label}</span>
+                  
+                  {/* Hover effect overlay */}
+                  <div className={`absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 ${
+                    activeTab !== tab.id ? 'hover:opacity-100' : ''
+                  }`}></div>
                 </button>
               );
             })}
@@ -87,7 +92,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-gray-400 hover:text-white transition-colors"
+            className="md:hidden text-gray-400 hover:text-white transition-all duration-300 hover:bg-[#161b22]/60 hover:backdrop-blur-xl p-2 rounded-lg border border-transparent hover:border-gray-600/30 hover:shadow-md hover:transform hover:scale-110 nav-button hover-stable"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? (
@@ -128,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
             <h2 className="text-lg font-bold text-white">Navigation</h2>
           </div>
           <button
-            className="text-gray-400 hover:text-white transition-all duration-300 hover:bg-[#161b22]/80 hover:backdrop-blur-xl p-2 rounded-lg border border-transparent hover:border-gray-600/30"
+            className="text-gray-400 hover:text-white transition-all duration-300 hover:bg-[#161b22]/80 hover:backdrop-blur-xl p-2 rounded-lg border border-transparent hover:border-gray-600/30 hover:transform hover:scale-110 nav-button hover-stable"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <X className="w-5 h-5" />
@@ -144,18 +149,28 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 text-left backdrop-blur-xl border ${
+                  className={`relative w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 text-left backdrop-blur-xl border border-transparent nav-button hover-stable ${
                     activeTab === tab.id
                       ? "bg-blue-500/15 text-white border-blue-400/40 shadow-lg shadow-blue-500/10 ring-1 ring-blue-300/20"
-                      : "text-gray-400 hover:text-white hover:bg-[#161b22]/70 hover:backdrop-blur-xl border-transparent hover:border-gray-600/30 hover:shadow-md"
+                      : "text-gray-400 hover:text-white hover:bg-[#161b22]/70 hover:backdrop-blur-xl hover:border-gray-600/30 hover:shadow-md hover:transform hover:scale-[1.02]"
                   }`}
                   style={{
                     backdropFilter: "blur(20px)",
                     WebkitBackdropFilter: "blur(20px)",
                   }}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{tab.label}</span>
+                  <Icon className="w-5 h-5 transition-all duration-300 hover:scale-110 hover:text-blue-400" />
+                  <span className="font-medium transition-all duration-300">{tab.label}</span>
+                  
+                  {/* Hover effect indicator */}
+                  <div className={`absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-400 to-blue-500 rounded-r-full transition-all duration-300 ${
+                    activeTab === tab.id ? 'opacity-100 scale-100' : 'opacity-0 scale-75 hover:opacity-100 hover:scale-100'
+                  }`}></div>
+                  
+                  {/* Background hover effect */}
+                  <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 transition-opacity duration-300 ${
+                    activeTab !== tab.id ? 'hover:opacity-100' : ''
+                  }`}></div>
                 </button>
               );
             })}

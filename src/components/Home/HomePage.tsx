@@ -67,24 +67,24 @@ const HomePage: React.FC = () => {
   }, [showNotifications]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       {/* Welcome Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 truncate">
               Welcome back, {user?.name?.split(' ')[0]}! 👋
             </h1>
-            <p className="text-gray-400">
+            <p className="text-sm sm:text-base text-gray-400 line-clamp-2">
               Here's what's happening in your {activeTab === 'college' ? 'college' : activeTab === 'global' ? 'global' : 'chat'} community
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-between sm:justify-end space-x-3 shrink-0">
             {/* Notification Bell with Dropdown */}
             <div className="relative" ref={notificationRef}>
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 bg-[#161b22] rounded-lg border border-gray-800 hover:border-gray-700 transition-colors"
+                className="relative p-2 sm:p-2 bg-[#161b22] rounded-lg border border-gray-800 hover:border-gray-700 transition-colors touch-manipulation"
               >
                 <Bell className="w-5 h-5 text-gray-400" />
                 {notificationCount > 0 && (
@@ -96,13 +96,13 @@ const HomePage: React.FC = () => {
               
               {/* Notification Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 top-12 w-80 bg-[#161b22] border border-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 top-12 w-80 sm:w-80 max-w-[calc(100vw-2rem)] bg-[#161b22] border border-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-hidden animate-in slide-in-from-top-2 duration-200">
                   <div className="p-4 border-b border-gray-800">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white">Notifications</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-white">Notifications</h3>
                       <button 
                         onClick={() => setShowNotifications(false)}
-                        className="p-1 text-gray-400 hover:text-white transition-colors"
+                        className="p-1 text-gray-400 hover:text-white transition-colors touch-manipulation"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -120,10 +120,11 @@ const HomePage: React.FC = () => {
             
             <button 
               onClick={() => setShowQuickActions(!showQuickActions)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors touch-manipulation"
             >
               <Plus className="w-4 h-4" />
-              <span>Quick Actions</span>
+              <span className="hidden sm:inline">Quick Actions</span>
+              <span className="sm:hidden">Actions</span>
             </button>
           </div>
         </div>
@@ -131,84 +132,84 @@ const HomePage: React.FC = () => {
 
       {/* Quick Actions Panel */}
       {showQuickActions && (
-        <div className="mb-8 bg-[#161b22] rounded-lg p-6 border border-gray-800">
+        <div className="mb-6 sm:mb-8 bg-[#161b22] rounded-lg p-4 sm:p-6 border border-gray-800">
           <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="flex items-center space-x-3 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-blue-500 transition-colors">
-              <BookOpen className="w-5 h-5 text-blue-400" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <button className="flex items-center space-x-3 p-3 sm:p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-blue-500 transition-colors touch-manipulation">
+              <BookOpen className="w-5 h-5 text-blue-400 shrink-0" />
               <span className="text-white text-sm">Share Notes</span>
             </button>
-            <button className="flex items-center space-x-3 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-green-500 transition-colors">
-              <Users className="w-5 h-5 text-green-400" />
+            <button className="flex items-center space-x-3 p-3 sm:p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-green-500 transition-colors touch-manipulation">
+              <Users className="w-5 h-5 text-green-400 shrink-0" />
               <span className="text-white text-sm">Create Study Group</span>
             </button>
-            <button className="flex items-center space-x-3 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-purple-500 transition-colors">
-              <Calendar className="w-5 h-5 text-purple-400" />
+            <button className="flex items-center space-x-3 p-3 sm:p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-purple-500 transition-colors touch-manipulation">
+              <Calendar className="w-5 h-5 text-purple-400 shrink-0" />
               <span className="text-white text-sm">Add Event</span>
             </button>
-            <button className="flex items-center space-x-3 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
-              <Briefcase className="w-5 h-5 text-orange-400" />
+            <button className="flex items-center space-x-3 p-3 sm:p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-orange-500 transition-colors touch-manipulation">
+              <Briefcase className="w-5 h-5 text-orange-400 shrink-0" />
               <span className="text-white text-sm">Find Jobs</span>
             </button>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="xl:col-span-3 space-y-4 sm:space-y-6">
           {/* Tab Navigation with Search */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-1 bg-[#161b22] p-1 rounded-lg border border-gray-800">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-1 bg-[#161b22] p-1 rounded-lg border border-gray-800 overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveTab('college')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
+          className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-md transition-all duration-200 whitespace-nowrap touch-manipulation ${
             activeTab === 'college'
               ? 'bg-blue-500 text-white'
               : 'text-gray-400 hover:text-white hover:bg-gray-800'
           }`}
         >
-          <School className="w-4 h-4" />
-          <span className="font-medium">College Hub</span>
+          <School className="w-4 h-4 shrink-0" />
+          <span className="font-medium text-sm sm:text-base">College Hub</span>
         </button>
         
         <button
           onClick={() => setActiveTab('global')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
+          className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-md transition-all duration-200 whitespace-nowrap touch-manipulation ${
             activeTab === 'global'
               ? 'bg-blue-500 text-white'
               : 'text-gray-400 hover:text-white hover:bg-gray-800'
           }`}
         >
-          <Globe className="w-4 h-4" />
-          <span className="font-medium">Global Feed</span>
+          <Globe className="w-4 h-4 shrink-0" />
+          <span className="font-medium text-sm sm:text-base">Global Feed</span>
         </button>
 
               <button
                 onClick={() => setActiveTab('chat')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
+                className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-md transition-all duration-200 whitespace-nowrap touch-manipulation ${
                   activeTab === 'chat'
                     ? 'bg-blue-500 text-white'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
-                <MessageSquare className="w-4 h-4" />
-                <span className="font-medium">Chat</span>
+                <MessageSquare className="w-4 h-4 shrink-0" />
+                <span className="font-medium text-sm sm:text-base">Chat</span>
               </button>
             </div>
 
-            <div className="flex items-center space-x-3">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row gap-3 sm:space-x-3 sm:gap-0">
+              <div className="relative flex-1 sm:flex-initial">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                 <input
                   type="text"
                   placeholder="Search posts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 bg-[#161b22] border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-2 bg-[#161b22] border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm sm:text-base touch-manipulation"
                 />
               </div>
-              <button className="p-2 bg-[#161b22] rounded-lg border border-gray-800 hover:border-gray-700 transition-colors">
+              <button className="p-2.5 sm:p-2 bg-[#161b22] rounded-lg border border-gray-800 hover:border-gray-700 transition-colors touch-manipulation">
                 <Filter className="w-4 h-4 text-gray-400" />
               </button>
             </div>
@@ -230,14 +231,14 @@ const HomePage: React.FC = () => {
 
       {/* Posts Feed */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg animate-pulse mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading posts...</p>
+        <div className="text-center py-8 sm:py-12">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg animate-pulse mx-auto mb-4"></div>
+          <p className="text-gray-400 text-sm sm:text-base">Loading posts...</p>
         </div>
       ) : (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
                   {filteredPosts.length > 0 ? (
-          <React.Suspense fallback={<div className="space-y-6">{Array(3).fill(0).map((_, i) => <div key={i} className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-48"></div>)}</div>}>
+          <React.Suspense fallback={<div className="space-y-4 sm:space-y-6">{Array(3).fill(0).map((_, i) => <div key={i} className="bg-[#161b22] rounded-lg p-4 sm:p-6 border border-gray-800 animate-pulse h-40 sm:h-48"></div>)}</div>}>
                       {filteredPosts.map((post) => (
                         <PostCard 
                           key={post.id} 
@@ -248,16 +249,16 @@ const HomePage: React.FC = () => {
             ))}
           </React.Suspense>
         ) : (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-8 sm:py-12">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
               {activeTab === 'college' ? (
-                <School className="w-8 h-8 text-gray-500" />
+                <School className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500" />
               ) : (
-                <Globe className="w-8 h-8 text-gray-500" />
+                <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500" />
               )}
             </div>
-                      <h3 className="text-lg font-medium text-white mb-2">No posts found</h3>
-            <p className="text-gray-400">
+                      <h3 className="text-base sm:text-lg font-medium text-white mb-2">No posts found</h3>
+            <p className="text-gray-400 text-sm sm:text-base px-4">
                         {searchQuery ? 'Try adjusting your search terms' : `Be the first to share something with your ${activeTab === 'college' ? 'college' : 'global'} community!`}
             </p>
           </div>
@@ -268,26 +269,26 @@ const HomePage: React.FC = () => {
           )}
         </div>
 
-        {/* Sidebar - Simplified */}
-        <div className="space-y-6">
+        {/* Sidebar - Hidden on mobile, shown on desktop */}
+        <div className="hidden xl:block space-y-6">
           {/* Quick Actions */}
           <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
             <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-blue-500 transition-colors">
-                <BookOpen className="w-5 h-5 text-blue-400" />
+              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-blue-500 transition-colors touch-manipulation">
+                <BookOpen className="w-5 h-5 text-blue-400 shrink-0" />
                 <span className="text-white">Share Notes</span>
               </button>
-              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-green-500 transition-colors">
-                <Users className="w-5 h-5 text-green-400" />
+              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-green-500 transition-colors touch-manipulation">
+                <Users className="w-5 h-5 text-green-400 shrink-0" />
                 <span className="text-white">Create Study Group</span>
               </button>
-              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-purple-500 transition-colors">
-                <Calendar className="w-5 h-5 text-purple-400" />
+              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-purple-500 transition-colors touch-manipulation">
+                <Calendar className="w-5 h-5 text-purple-400 shrink-0" />
                 <span className="text-white">Add Event</span>
               </button>
-              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
-                <Briefcase className="w-5 h-5 text-orange-400" />
+              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-orange-500 transition-colors touch-manipulation">
+                <Briefcase className="w-5 h-5 text-orange-400 shrink-0" />
                 <span className="text-white">Find Jobs</span>
               </button>
             </div>
