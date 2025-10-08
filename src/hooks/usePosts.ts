@@ -81,7 +81,7 @@ export const usePosts = (scope: 'college' | 'global' = 'college') => {
     }
   };
 
-  const createPost = async (content: string, file?: File, isAnonymous = false) => {
+  const createPost = async (content: string, file?: File, isAnonymous = false, tags?: string[]) => {
     if (!user) return;
 
     try {
@@ -118,6 +118,7 @@ export const usePosts = (scope: 'college' | 'global' = 'college') => {
           file_type: fileType,
           is_anonymous: isAnonymous,
           scope,
+          tags: tags || [],
         });
 
       if (error) throw error;

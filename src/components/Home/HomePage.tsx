@@ -1,29 +1,165 @@
-import React, { useState } from 'react';
-import { School, Globe } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  School, 
+  Globe, 
+  Users, 
+  MessageSquare, 
+  Bell, 
+  Calendar,
+  BookOpen,
+  Briefcase,
+  Filter,
+  Search,
+  Plus,
+  X
+} from 'lucide-react';
 import { useAuth } from '../AuthProvider';
+import { usePosts } from '../../hooks/usePosts';
 
 // Lazy load components for better performance
 const PostComposer = React.lazy(() => import('./PostComposer'));
 const PostCard = React.lazy(() => import('./PostCard'));
-const PostsHook = React.lazy(() => import('../../hooks/usePosts').then(module => ({ default: () => module.usePosts })));
+const ChatSection = React.lazy(() => import('./ChatSection'));
+const NotificationDropdown = React.lazy(() => import('./NotificationDropdown'));
 
 const HomePage: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'college' | 'global'>('college');
+  const [activeTab, setActiveTab] = useState<'college' | 'global' | 'chat'>('college');
+  const [showQuickActions, setShowQuickActions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
   
-  // Mock data for better performance - replace with real data when needed
-  const [posts] = useState([]);
-  const [loading] = useState(false);
+  const { posts, loading, createPost, likePost, unlikePost } = usePosts(activeTab === 'chat' ? 'college' : activeTab);
   
-  const createPost = async (content: string, file?: File, isAnonymous?: boolean) => {
-    // Mock implementation - replace with real API call
-    console.log('Creating post:', { content, file, isAnonymous });
+
+  // Mock notification count
+  const [notificationCount, setNotificationCount] = useState(8);
+
+  const handleCreatePost = async (content: string, file?: File, isAnonymous?: boolean) => {
+    try {
+      await createPost(content, file, isAnonymous);
+    } catch (error) {
+      console.error('Error creating post:', error);
+    }
   };
 
+  const filteredPosts = posts.filter(post => 
+    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.author.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Handle clicking outside notification dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Tab Navigation */}
-      <div className="flex items-center space-x-1 mb-8 bg-[#161b22] p-1 rounded-lg border border-gray-800 w-fit">
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Welcome Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Welcome back, {user?.name?.split(' ')[0]}! 👋
+            </h1>
+            <p className="text-gray-400">
+              Here's what's happening in your {activeTab === 'college' ? 'college' : activeTab === 'global' ? 'global' : 'chat'} community
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            {/* Notification Bell with Dropdown */}
+            <div className="relative" ref={notificationRef}>
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 bg-[#161b22] rounded-lg border border-gray-800 hover:border-gray-700 transition-colors"
+              >
+                <Bell className="w-5 h-5 text-gray-400" />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                    {notificationCount > 9 ? '9+' : notificationCount}
+                  </span>
+                )}
+              </button>
+              
+              {/* Notification Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 top-12 w-80 bg-[#161b22] border border-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                  <div className="p-4 border-b border-gray-800">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-white">Notifications</h3>
+                      <button 
+                        onClick={() => setShowNotifications(false)}
+                        className="p-1 text-gray-400 hover:text-white transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="max-h-80 overflow-y-auto">
+                    <React.Suspense fallback={<div className="p-4 text-center text-gray-400">Loading...</div>}>
+                      <NotificationDropdown onNotificationCountChange={setNotificationCount} />
+                    </React.Suspense>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <button 
+              onClick={() => setShowQuickActions(!showQuickActions)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Quick Actions</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions Panel */}
+      {showQuickActions && (
+        <div className="mb-8 bg-[#161b22] rounded-lg p-6 border border-gray-800">
+          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button className="flex items-center space-x-3 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-blue-500 transition-colors">
+              <BookOpen className="w-5 h-5 text-blue-400" />
+              <span className="text-white text-sm">Share Notes</span>
+            </button>
+            <button className="flex items-center space-x-3 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-green-500 transition-colors">
+              <Users className="w-5 h-5 text-green-400" />
+              <span className="text-white text-sm">Create Study Group</span>
+            </button>
+            <button className="flex items-center space-x-3 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-purple-500 transition-colors">
+              <Calendar className="w-5 h-5 text-purple-400" />
+              <span className="text-white text-sm">Add Event</span>
+            </button>
+            <button className="flex items-center space-x-3 p-4 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+              <Briefcase className="w-5 h-5 text-orange-400" />
+              <span className="text-white text-sm">Find Jobs</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Tab Navigation with Search */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1 bg-[#161b22] p-1 rounded-lg border border-gray-800">
         <button
           onClick={() => setActiveTab('college')}
           className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
@@ -47,12 +183,48 @@ const HomePage: React.FC = () => {
           <Globe className="w-4 h-4" />
           <span className="font-medium">Global Feed</span>
         </button>
+
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
+                  activeTab === 'chat'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="font-medium">Chat</span>
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search posts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 bg-[#161b22] border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                />
+              </div>
+              <button className="p-2 bg-[#161b22] rounded-lg border border-gray-800 hover:border-gray-700 transition-colors">
+                <Filter className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
       </div>
 
+          {/* Content based on active tab */}
+          {activeTab === 'chat' ? (
+            <React.Suspense fallback={<div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-96"></div>}>
+              <ChatSection />
+            </React.Suspense>
+          ) : (
+            <>
       {/* Post Composer */}
-      <div className="mb-8">
+              <div>
         <React.Suspense fallback={<div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-32"></div>}>
-          <PostComposer onPostCreate={createPost} />
+                  <PostComposer onPostCreate={handleCreatePost} />
         </React.Suspense>
       </div>
 
@@ -64,10 +236,15 @@ const HomePage: React.FC = () => {
         </div>
       ) : (
       <div className="space-y-6">
-        {posts.length > 0 ? (
+                  {filteredPosts.length > 0 ? (
           <React.Suspense fallback={<div className="space-y-6">{Array(3).fill(0).map((_, i) => <div key={i} className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-48"></div>)}</div>}>
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+                      {filteredPosts.map((post) => (
+                        <PostCard 
+                          key={post.id} 
+                          post={post} 
+                          onLike={likePost}
+                          onUnlike={unlikePost}
+                        />
             ))}
           </React.Suspense>
         ) : (
@@ -79,14 +256,63 @@ const HomePage: React.FC = () => {
                 <Globe className="w-8 h-8 text-gray-500" />
               )}
             </div>
-            <h3 className="text-lg font-medium text-white mb-2">No posts yet</h3>
+                      <h3 className="text-lg font-medium text-white mb-2">No posts found</h3>
             <p className="text-gray-400">
-              Be the first to share something with your {activeTab === 'college' ? 'college' : 'global'} community!
+                        {searchQuery ? 'Try adjusting your search terms' : `Be the first to share something with your ${activeTab === 'college' ? 'college' : 'global'} community!`}
             </p>
           </div>
         )}
       </div>
       )}
+            </>
+          )}
+        </div>
+
+        {/* Sidebar - Simplified */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
+            <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-blue-500 transition-colors">
+                <BookOpen className="w-5 h-5 text-blue-400" />
+                <span className="text-white">Share Notes</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-green-500 transition-colors">
+                <Users className="w-5 h-5 text-green-400" />
+                <span className="text-white">Create Study Group</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-purple-500 transition-colors">
+                <Calendar className="w-5 h-5 text-purple-400" />
+                <span className="text-white">Add Event</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 bg-[#0d1117] rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                <Briefcase className="w-5 h-5 text-orange-400" />
+                <span className="text-white">Find Jobs</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Study Tips */}
+          <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800">
+            <h3 className="text-lg font-semibold text-white mb-4">Study Tips</h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-[#0d1117] rounded-lg border border-gray-700">
+                <h4 className="text-sm font-medium text-white mb-1">Pomodoro Technique</h4>
+                <p className="text-xs text-gray-400">Study for 25 minutes, then take a 5-minute break</p>
+              </div>
+              <div className="p-3 bg-[#0d1117] rounded-lg border border-gray-700">
+                <h4 className="text-sm font-medium text-white mb-1">Active Recall</h4>
+                <p className="text-xs text-gray-400">Test yourself regularly instead of just re-reading</p>
+              </div>
+              <div className="p-3 bg-[#0d1117] rounded-lg border border-gray-700">
+                <h4 className="text-sm font-medium text-white mb-1">Spaced Repetition</h4>
+                <p className="text-xs text-gray-400">Review material at increasing intervals</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
