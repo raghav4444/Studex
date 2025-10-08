@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Mail, Lock, User, GraduationCap, Calendar, Book } from "lucide-react";
+import { Mail, Lock, User, GraduationCap, Calendar, Book, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../AuthProvider";
 import OTPVerification from "./OTPVerification";
 import {
@@ -14,6 +14,7 @@ interface SignupFormProps {
 
 const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
   const [showOTP, setShowOTP] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   interface UserData {
     name: string;
     email: string;
@@ -262,16 +263,23 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              className="w-full pl-10 pr-4 py-3 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+              className="w-full pl-10 pr-12 py-3 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
               placeholder="Create a strong password"
               required
               pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$"
               title="Password must be at least 8 characters, include letters and numbers."
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
               Must be at least 8 characters, include letters and numbers.
