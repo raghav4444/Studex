@@ -29,6 +29,7 @@ const JobsPage = React.lazy(() => import("./components/Jobs/JobsPage"));
 const NotificationsPage = React.lazy(
   () => import("./components/Notifications/NotificationsPage")
 );
+const ChatPage = React.lazy(() => import("./components/Chat/ChatPage"));
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();

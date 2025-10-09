@@ -1,6 +1,7 @@
 export interface User {
   id: string;
   name: string;
+  username: string;
   email: string;
   college: string;
   branch: string;
@@ -139,10 +140,47 @@ export interface Achievement {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'like' | 'comment' | 'mentorship' | 'event' | 'achievement';
+  type: 'like' | 'comment' | 'mentorship' | 'event' | 'achievement' | 'message';
   title: string;
   message: string;
   isRead: boolean;
   actionUrl?: string;
   createdAt: Date;
+}
+
+// Chat-related interfaces
+export interface Conversation {
+  id: string;
+  participants: User[];
+  lastMessage?: Message;
+  unreadCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  sender: User;
+  content: string;
+  messageType: 'text' | 'image' | 'file';
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: string;
+  isRead: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ChatSearchResult {
+  id: string;
+  name: string;
+  username: string;
+  avatar?: string;
+  college: string;
+  branch: string;
+  year: number;
+  isOnline: boolean;
+  lastSeen?: Date;
 }

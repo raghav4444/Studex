@@ -10,6 +10,7 @@ import {
   Bell,
   Menu,
   X,
+  MessageCircle,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -29,9 +30,8 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
       { id: "study-groups", label: "Groups", icon: Users },
       { id: "mentorship", label: "Mentorship", icon: Users },
       { id: "jobs", label: "Jobs", icon: Briefcase },
-      { id: "profile", label: "Profile", icon: User },
-      { id: "notifications", label: "Notifications", icon: Bell },
       { id: "skills", label: "Skill Hub", icon: MessageSquare },
+      { id: "profile", label: "Profile", icon: User },
     ],
     []
   );
@@ -54,10 +54,10 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
           </div>
 
           {/* Mobile - Empty left space */}
-          <div className="md:hidden w-8"></div>
+          <div className="lg:hidden w-8"></div>
 
           {/* Mobile - Centered Logo */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="lg:hidden flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
@@ -65,14 +65,14 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1 bg-[#161b22]/60 backdrop-blur-2xl rounded-xl p-2 border border-gray-700/50 shadow-2xl ring-1 ring-white/5">
-            {tabs.slice(0, 7).map((tab) => {
+          <nav className="hidden lg:flex items-center space-x-1 bg-[#161b22]/60 backdrop-blur-2xl rounded-xl p-2 border border-gray-700/50 shadow-2xl ring-1 ring-white/5">
+            {tabs.slice(0, 8).map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`relative px-4 py-2 rounded-lg flex items-center space-x-2 transition-all duration-300 backdrop-blur-sm border border-transparent nav-button hover-stable ${
+                  className={`relative px-3 py-2 rounded-lg flex items-center space-x-2 transition-all duration-300 backdrop-blur-sm border border-transparent nav-button hover-stable ${
                     activeTab === tab.id
                       ? "bg-blue-500/20 text-white shadow-lg shadow-blue-500/20 backdrop-blur-xl border-blue-400/30 ring-1 ring-blue-300/20"
                       : "text-gray-400 hover:text-white hover:bg-[#161b22]/80 hover:backdrop-blur-xl hover:border-gray-600/30 hover:shadow-md hover:transform hover:scale-105"
@@ -90,9 +90,68 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
             })}
           </nav>
 
+          {/* Medium Desktop Navigation (md to lg) */}
+          <nav className="hidden md:flex lg:hidden items-center space-x-1 bg-[#161b22]/60 backdrop-blur-2xl rounded-xl p-2 border border-gray-700/50 shadow-2xl ring-1 ring-white/5">
+            {tabs.slice(0, 6).map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`relative px-3 py-2 rounded-lg flex items-center space-x-2 transition-all duration-300 backdrop-blur-sm border border-transparent nav-button hover-stable ${
+                    activeTab === tab.id
+                      ? "bg-blue-500/20 text-white shadow-lg shadow-blue-500/20 backdrop-blur-xl border-blue-400/30 ring-1 ring-blue-300/20"
+                      : "text-gray-400 hover:text-white hover:bg-[#161b22]/80 hover:backdrop-blur-xl hover:border-gray-600/30 hover:shadow-md hover:transform hover:scale-105"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 transition-transform duration-300 hover:scale-110" />
+                  <span className="text-sm font-medium whitespace-nowrap">{tab.label}</span>
+                  
+                  {/* Hover effect overlay */}
+                  <div className={`absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 ${
+                    activeTab !== tab.id ? 'hover:opacity-100' : ''
+                  }`}></div>
+                </button>
+              );
+            })}
+            
+            {/* More button for additional tabs */}
+            <div className="relative group">
+              <button className="relative px-3 py-2 rounded-lg flex items-center space-x-2 transition-all duration-300 backdrop-blur-sm border border-transparent nav-button hover-stable text-gray-400 hover:text-white hover:bg-[#161b22]/80 hover:backdrop-blur-xl hover:border-gray-600/30 hover:shadow-md hover:transform hover:scale-105">
+                <span className="text-sm font-medium">More</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {/* Dropdown for additional tabs */}
+              <div className="absolute top-full right-0 mt-2 w-48 bg-[#161b22]/95 backdrop-blur-xl rounded-lg border border-gray-700/50 shadow-2xl ring-1 ring-white/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <div className="p-2 space-y-1">
+                  {tabs.slice(6).map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleTabChange(tab.id)}
+                        className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 text-left ${
+                          activeTab === tab.id
+                            ? "bg-blue-500/15 text-white"
+                            : "text-gray-400 hover:text-white hover:bg-[#161b22]/70"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span className="text-sm font-medium">{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </nav>
+
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-gray-400 hover:text-white transition-all duration-300 hover:bg-[#161b22]/60 hover:backdrop-blur-xl p-2 rounded-lg border border-transparent hover:border-gray-600/30 hover:shadow-md hover:transform hover:scale-110 nav-button hover-stable"
+            className="lg:hidden text-gray-400 hover:text-white transition-all duration-300 hover:bg-[#161b22]/60 hover:backdrop-blur-xl p-2 rounded-lg border border-transparent hover:border-gray-600/30 hover:shadow-md hover:transform hover:scale-110 nav-button hover-stable"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? (
@@ -107,14 +166,14 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-[#0d1117]/80 backdrop-blur-md z-40"
+          className="lg:hidden fixed inset-0 bg-[#0d1117]/80 backdrop-blur-md z-40"
           onClick={() => setIsMobileMenuOpen(false)}
         ></div>
       )}
 
       {/* Mobile Sidebar */}
       <div
-        className={`md:hidden fixed top-0 right-0 h-full w-80 bg-[#0d1117]/95 backdrop-blur-3xl border-l border-gray-700/50 transform transition-all duration-500 ease-out z-50 shadow-2xl ring-1 ring-white/5 ${
+        className={`lg:hidden fixed top-0 right-0 h-full w-80 bg-[#0d1117]/95 backdrop-blur-3xl border-l border-gray-700/50 transform transition-all duration-500 ease-out z-50 shadow-2xl ring-1 ring-white/5 ${
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
         style={{

@@ -19,7 +19,7 @@ import { usePosts } from '../../hooks/usePosts';
 // Lazy load components for better performance
 const PostComposer = React.lazy(() => import('./PostComposer'));
 const PostCard = React.lazy(() => import('./PostCard'));
-const ChatSection = React.lazy(() => import('./ChatSection'));
+const ChatPage = React.lazy(() => import('../Chat/ChatPage'));
 const NotificationDropdown = React.lazy(() => import('./NotificationDropdown'));
 
 const HomePage: React.FC = () => {
@@ -218,7 +218,7 @@ const HomePage: React.FC = () => {
           {/* Content based on active tab */}
           {activeTab === 'chat' ? (
             <React.Suspense fallback={<div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-96"></div>}>
-              <ChatSection />
+              <ChatPage />
             </React.Suspense>
           ) : (
             <>

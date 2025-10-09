@@ -3,6 +3,32 @@ import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { User } from "../types";
 
+// Utility function to format names consistently
+const formatDisplayName = (name: string | undefined, email: string | undefined): string => {
+  // If we have a proper name, use it
+  if (name && name.trim() && name !== email?.split("@")[0]) {
+    return name.trim();
+  }
+  
+  // Fallback to email-based name formatting
+  if (!email) return "User";
+  
+  const emailPrefix = email.split("@")[0];
+  
+  // Handle common email patterns
+  if (emailPrefix.includes(".") || emailPrefix.includes("_")) {
+    // Convert dots and underscores to spaces and capitalize
+    return emailPrefix
+      .replace(/[._]/g, " ")
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  }
+  
+  // For simple email prefixes, just capitalize first letter
+  return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1).toLowerCase();
+};
+
 export const useSupabaseAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +90,7 @@ export const useSupabaseAuth = () => {
     };
   }, [loading]);
 
-  const fetchUserProfile = async (authUser: SupabaseUser) => {
+  const fetchUserProfile = async (authUser: SupabaseUser, retryCount = 0) => {
     console.log("🔍 Fetching profile for user:", authUser.id, authUser.email);
 
     // Query the database for the user's profile
@@ -109,22 +135,37 @@ export const useSupabaseAuth = () => {
       console.log("📊 Profile query completed!");
       console.log("📊 Query result:", {
         profileCount: profiles?.length || 0,
-        error,
+        error: error?.message,
+        retryCount,
       });
 
       if (error) {
-        console.error("💥 Profile query error:", error);
+        console.error("💥 Profile query error:", error.message);
+        
+        // Retry logic for network errors
+        if (retryCount < 2 && (error.message.includes("timeout") || error.message.includes("network"))) {
+          console.log(`🔄 Retrying profile fetch (attempt ${retryCount + 1}/2)...`);
+          setTimeout(() => fetchUserProfile(authUser, retryCount + 1), 1000);
+          return;
+        }
+        
         setLoading(false);
         return;
       }
 
       if (profiles && profiles.length > 0) {
         const profile = profiles[0]; // Get the first profile
-        console.log("✅ Profile found:", profile);
+        console.log("✅ Profile found:", {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          college: profile.college,
+        });
 
         const user: User = {
           id: profile.id,
-          name: profile.name,
+          name: formatDisplayName(profile.name, profile.email),
+          username: profile.username || formatDisplayName(profile.name, profile.email).toLowerCase().replace(/\s+/g, ''),
           email: profile.email,
           college: profile.college,
           branch: profile.branch,
@@ -139,36 +180,46 @@ export const useSupabaseAuth = () => {
           lastActive: new Date(profile.updated_at),
         };
         setUser(user);
-        console.log("👤 User set:", user.name, user.email);
+        console.log("👤 User set successfully:", user.name);
         setLoading(false);
         return;
+      } else {
+        console.log("⚠️ No profile found in database, creating fallback profile");
       }
     } catch (error) {
-      console.error("💥 Error querying profile:", error);
+      console.error("💥 Error querying profile:", error instanceof Error ? error.message : "Unknown error");
 
-      // FALLBACK: Create a basic user profile from auth data
-      console.log("🔄 Database query failed, creating fallback user profile");
-      const fallbackUser: User = {
-        id: "fallback-" + authUser.id,
-        name: authUser.email?.split("@")[0] || "User",
-        email: authUser.email || "",
-        college: "Axis Colleges",
-        branch: "Computer Science",
-        year: 2023,
-        bio: "Profile loaded from authentication data",
-        avatar: undefined,
-        skills: [],
-        achievements: [],
-        isVerified: true,
-        isAnonymous: false,
-        joinedAt: new Date(),
-        lastActive: new Date(),
-      };
-
-      setUser(fallbackUser);
-      console.log("✅ Fallback user profile created:", fallbackUser.name);
+      // Retry logic for general errors
+      if (retryCount < 2) {
+        console.log(`🔄 Retrying profile fetch due to error (attempt ${retryCount + 1}/2)...`);
+        setTimeout(() => fetchUserProfile(authUser, retryCount + 1), 1000);
+        return;
+      }
     }
 
+    // FALLBACK: Create a basic user profile from auth data
+    console.log("🔄 Creating fallback user profile from auth data");
+    
+    const fallbackUser: User = {
+      id: "fallback-" + authUser.id,
+      name: formatDisplayName(undefined, authUser.email),
+      username: formatDisplayName(undefined, authUser.email).toLowerCase().replace(/\s+/g, ''),
+      email: authUser.email || "",
+      college: "Axis Colleges",
+      branch: "Computer Science",
+      year: 2023,
+      bio: "Profile loaded from authentication data",
+      avatar: undefined,
+      skills: [],
+      achievements: [],
+      isVerified: true,
+      isAnonymous: false,
+      joinedAt: new Date(),
+      lastActive: new Date(),
+    };
+
+    setUser(fallbackUser);
+    console.log("✅ Fallback user profile created:", fallbackUser.name);
     setLoading(false);
   };
 
@@ -211,10 +262,15 @@ export const useSupabaseAuth = () => {
       if (error) throw error;
 
       if (data.user) {
+        // Generate username from name
+        const baseUsername = userData.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+        const username = baseUsername.length >= 3 ? baseUsername : baseUsername + '123';
+        
         // Create profile
         const { error: profileError } = await supabase.from("profiles").insert({
           user_id: data.user.id,
           name: userData.name,
+          username: username,
           email: userData.email,
           college: userData.college,
           branch: userData.branch,
@@ -289,11 +345,15 @@ export const useSupabaseAuth = () => {
     try {
       console.log("🔨 Manually creating profile for user:", session.user.email);
 
+      const displayName = formatDisplayName(undefined, session.user.email);
+      const username = displayName.toLowerCase().replace(/\s+/g, '');
+      
       const { data: profile, error } = await supabase
         .from("profiles")
         .insert({
           user_id: session.user.id,
-          name: session.user.email?.split("@")[0] || "User",
+          name: displayName,
+          username: username,
           email: session.user.email,
           college: "Axis Colleges",
           branch: "Computer Science",

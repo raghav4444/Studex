@@ -22,9 +22,11 @@ import {
   Upload,
   ChevronRight,
   BarChart3,
-  Settings
+  Settings,
+  User
 } from 'lucide-react';
 import { useAuth } from '../AuthProvider';
+import UsernameUpdate from './UsernameUpdate';
 
 interface ProfileData {
   id: string;
@@ -64,27 +66,28 @@ const ProfilePage: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'groups' | 'events' | 'activity'>('posts');
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+  const [showUsernameUpdate, setShowUsernameUpdate] = useState(false);
   
-  // Mock profile data - in real app, this would come from backend
+  // Profile data using actual user data
   const [profileData, setProfileData] = useState<ProfileData>({
     id: user?.id || '1',
-    name: user?.name || 'Alex Johnson',
-    username: 'alexjohnson24',
-    email: user?.email || 'alex.johnson@university.edu',
-    bio: 'Computer Science student passionate about AI and machine learning. Love to share knowledge and help fellow students succeed.',
-    college: 'Massachusetts Institute of Technology',
-    department: 'Computer Science',
-    year: '3rd Year',
-    location: 'Cambridge, MA',
-    skills: ['JavaScript', 'Python', 'React', 'Machine Learning', 'Data Science', 'Algorithm Design'],
-    profilePhoto: undefined,
+    name: user?.name || 'User',
+    username: user?.username || 'user123',
+    email: user?.email || 'user@example.com',
+    bio: user?.bio || 'Student at Studex',
+    college: user?.college || 'Axis Colleges',
+    department: user?.branch || 'Computer Science',
+    year: user?.year?.toString() || '2023',
+    location: 'India',
+    skills: user?.skills || ['Programming', 'Problem Solving'],
+    profilePhoto: user?.avatar,
     coverPhoto: undefined,
-    isVerified: true,
+    isVerified: user?.isVerified || false,
     isAnonymous: user?.isAnonymous || false,
     socialLinks: {
-      linkedin: 'https://linkedin.com/in/alexjohnson',
-      github: 'https://github.com/alexjohnson',
-      portfolio: 'https://alexjohnson.dev'
+      linkedin: '',
+      github: '',
+      portfolio: ''
     },
     privacySettings: {
       showRealName: true,
@@ -92,10 +95,10 @@ const ProfilePage: React.FC = () => {
       allowDirectMessages: true
     },
     stats: {
-      posts: 127,
-      followers: 842,
-      following: 324,
-      studyHours: 156
+      posts: 0,
+      followers: 0,
+      following: 0,
+      studyHours: 0
     }
   });
 
@@ -205,7 +208,16 @@ const ProfilePage: React.FC = () => {
                       {displayName}
                     </h2>
                     {!profileData.isAnonymous && (
-                      <p className="text-gray-400">@{profileData.username}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-gray-400">@{profileData.username}</p>
+                        <button
+                          onClick={() => setShowUsernameUpdate(true)}
+                          className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
+                          title="Edit username"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                      </div>
                     )}
                   </div>
                   
@@ -536,6 +548,22 @@ const ProfilePage: React.FC = () => {
           setProfileData={setProfileData}
           onClose={() => setIsEditMode(false)}
         />
+      )}
+
+      {/* Username Update Modal */}
+      {showUsernameUpdate && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <UsernameUpdate
+              currentUsername={profileData.username}
+              onUpdate={(newUsername) => {
+                setProfileData({ ...profileData, username: newUsername });
+                setShowUsernameUpdate(false);
+              }}
+              onCancel={() => setShowUsernameUpdate(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
