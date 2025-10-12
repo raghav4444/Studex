@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, Image, Paperclip, MoreVertical, Phone, Video, MessageCircle, X, File, FileImage } from 'lucide-react';
 import { useAuth } from '../AuthProvider';
 import { Conversation, Message } from '../../types';
+import { useWebRTC } from '../../hooks/useWebRTC';
+import CallModal from '../Call/CallModal';
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -21,6 +23,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // WebRTC calling functionality
+  const {
+    callState,
+    incomingCall,
+    outgoingCall,
+    localVideoRef,
+    remoteVideoRef,
+    startCall,
+    acceptCall,
+    rejectCall,
+    endCall,
+    toggleAudio,
+    toggleVideo,
+    toggleScreenShare
+  } = useWebRTC();
 
   const otherUser = conversationParticipants.find(p => p.id !== user?.id);
 
@@ -185,6 +203,34 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
       handleFileSelect(files);
     }
   };
+
+  // Call handler functions
+  const handleStartAudioCall = () => {
+    if (otherUser) {
+      startCall(otherUser, 'audio');
+    }
+  };
+
+  const handleStartVideoCall = () => {
+    if (otherUser) {
+      startCall(otherUser, 'video');
+    }
+  };
+
+  const handleAcceptCall = () => {
+    if (incomingCall && callState.callType) {
+      acceptCall(incomingCall, callState.callType);
+    }
+  };
+
+  const handleRejectCall = () => {
+    rejectCall();
+  };
+
+  const handleEndCall = () => {
+    endCall();
+  };
+
 
   const formatMessageTime = (date: Date) => {
     const now = new Date();
@@ -364,16 +410,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
 
            {/* Action Buttons */}
            <div className="flex items-center space-x-1 flex-shrink-0">
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+             <button 
+               onClick={handleStartAudioCall}
+               className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+               title="Start audio call"
+             >
                <Phone className="w-5 h-5 text-gray-400" />
-            </button>
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+             </button>
+             <button 
+               onClick={handleStartVideoCall}
+               className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+               title="Start video call"
+             >
                <Video className="w-5 h-5 text-gray-400" />
-            </button>
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+             </button>
+             <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
                <MoreVertical className="w-5 h-5 text-gray-400" />
-            </button>
-          </div>
+             </button>
+           </div>
         </div>
       </div>
 
@@ -504,9 +558,27 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
            onChange={(e) => handleFileSelect(e.target.files)}
            className="hidden"
          />
-      </div>
-    </div>
-  );
-};
+       </div>
 
-export default ChatWindow;
+       {/* Call Modal */}
+       <CallModal
+         isOpen={callState.isInCall}
+         callUser={otherUser || null}
+         callType={callState.callType}
+         callState={callState}
+         incomingCall={incomingCall}
+         outgoingCall={outgoingCall}
+         onAccept={handleAcceptCall}
+         onReject={handleRejectCall}
+         onEnd={handleEndCall}
+         onToggleAudio={toggleAudio}
+         onToggleVideo={toggleVideo}
+         onToggleScreenShare={toggleScreenShare}
+         localVideoRef={localVideoRef}
+         remoteVideoRef={remoteVideoRef}
+       />
+     </div>
+   );
+ };
+ 
+ export default ChatWindow;
