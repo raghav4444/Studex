@@ -1,29 +1,43 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Send, Image, Paperclip, MoreVertical, User, Phone, Video } from 'lucide-react';
-import { useChat } from '../../hooks/useChat';
+import { ArrowLeft, Send, Image, Paperclip, MoreVertical, User, Phone, Video, MessageCircle } from 'lucide-react';
 import { useAuth } from '../AuthProvider';
 import { Conversation, Message } from '../../types';
 
 interface ChatWindowProps {
   conversation: Conversation;
   onBack: () => void;
+  chatHook: ReturnType<typeof import('../../hooks/useChat').useChat>;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook }) => {
   const { user } = useAuth();
-  const { messages, loading, sendMessage, fetchMessages, markMessagesAsRead } = useChat();
+  const { messages, loading, sendMessage, fetchMessages, markMessagesAsRead, fetchConversationParticipants } = chatHook;
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [conversationParticipants, setConversationParticipants] = useState(conversation.participants);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const otherUser = conversation.participants.find(p => p.id !== user?.id);
+  const otherUser = conversationParticipants.find(p => p.id !== user?.id);
 
   useEffect(() => {
     if (conversation.id) {
       fetchMessages(conversation.id);
     }
   }, [conversation.id, fetchMessages]);
+
+  // Fetch participants when conversation changes
+  useEffect(() => {
+    if (conversation.id && conversation.participants.length === 0) {
+      const loadParticipants = async () => {
+        const participants = await fetchConversationParticipants(conversation.id);
+        setConversationParticipants(participants);
+      };
+      loadParticipants();
+    } else {
+      setConversationParticipants(conversation.participants);
+    }
+  }, [conversation.id, conversation.participants, fetchConversationParticipants]);
 
   useEffect(() => {
     // Mark messages as read when conversation is opened
@@ -75,11 +89,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
       new Date(message.createdAt).getTime() - new Date(messages[index + 1]?.createdAt || 0).getTime() > 300000; // 5 minutes
 
     return (
-      <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-2`}>
-        <div className={`flex ${isOwn ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2 max-w-[70%]`}>
+      <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4 group`}>
+        <div className={`flex ${isOwn ? 'flex-row-reverse' : 'flex-row'} items-end space-x-3 max-w-[80%] sm:max-w-[70%]`}>
           {/* Avatar */}
           {showAvatar && !isOwn && (
-            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
               {message.sender.avatar ? (
                 <img
                   src={message.sender.avatar}
@@ -87,26 +101,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <User className="w-4 h-4 text-gray-400" />
+                <span className="text-white font-medium text-sm">
+                  {message.sender.name ? message.sender.name[0].toUpperCase() : '?'}
+                </span>
               )}
             </div>
           )}
           
-          {showAvatar && isOwn && <div className="w-8 h-8"></div>}
+          {showAvatar && isOwn && <div className="w-8"></div>}
 
           {/* Message Content */}
           <div className={`${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
             {/* Sender Name */}
             {showAvatar && !isOwn && (
-              <p className="text-gray-400 text-xs mb-1 px-2">{message.sender.name}</p>
+              <p className="text-gray-400 text-xs mb-1 px-2 font-medium">{message.sender.name}</p>
             )}
             
             {/* Message Bubble */}
             <div
-              className={`px-3 py-2 rounded-lg ${
+              className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 group-hover:shadow-xl ${
                 isOwn
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-[#161b22] text-white border border-gray-700'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md'
+                  : 'bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-bl-md border border-gray-600/30'
               }`}
             >
               {message.messageType === 'text' && (
@@ -160,69 +176,85 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-[#0d1117]">
+    <div className="h-full flex flex-col bg-gradient-to-br from-[#0d1117] to-[#161b22]">
       {/* Header */}
-      <div className="p-3 sm:p-4 border-b border-gray-800 bg-[#161b22]">
-        <div className="flex items-center space-x-3">
+      <div className="p-4 sm:p-6 border-b border-gray-800/50 bg-gradient-to-r from-[#161b22]/80 to-[#1f2937]/50 backdrop-blur-sm">
+        <div className="flex items-center space-x-4">
           <button
             onClick={onBack}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-700/50 rounded-xl transition-all duration-200 lg:hidden group"
           >
-            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:scale-110 transition-all" />
           </button>
           
           {/* User Info */}
-          <div className="flex items-center space-x-3 flex-1">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-full flex items-center justify-center">
-              {otherUser.avatar ? (
-                <img
-                  src={otherUser.avatar}
-                  alt={otherUser.name}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
-                />
-              ) : (
-                <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center shadow-lg">
+                {otherUser.avatar ? (
+                  <img
+                    src={otherUser.avatar}
+                    alt={otherUser.name}
+                    className="w-12 h-12 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <span className="text-white font-semibold text-lg">
+                    {otherUser.name ? otherUser.name[0].toUpperCase() : '?'}
+                  </span>
+                )}
+              </div>
+              {otherUser.lastActive && new Date().getTime() - otherUser.lastActive.getTime() < 300000 && (
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#0d1117] shadow-lg">
+                  <div className="w-full h-full bg-green-400 rounded-full animate-pulse"></div>
+                </div>
               )}
             </div>
             
             <div className="flex-1 min-w-0">
-              <h2 className="text-white font-medium truncate text-sm sm:text-base">{otherUser.name}</h2>
-              <p className="text-gray-400 text-xs sm:text-sm truncate">
-                @{otherUser.username} • {otherUser.college}
-              </p>
+              <h2 className="text-white font-semibold truncate text-lg">{otherUser.name}</h2>
+              <div className="flex items-center space-x-2">
+                <p className="text-gray-400 text-sm">@{otherUser.username}</p>
+                <span className="text-gray-600">•</span>
+                <p className="text-gray-500 text-sm">{otherUser.college}</p>
+              </div>
             </div>
           </div>
 
           {/* Action Buttons - Hidden on mobile */}
           <div className="hidden sm:flex items-center space-x-2">
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-              <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+            <button className="p-3 hover:bg-gray-700/50 rounded-xl transition-all duration-200 group">
+              <Phone className="w-5 h-5 text-gray-400 group-hover:text-green-400 group-hover:scale-110 transition-all" />
             </button>
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-              <Video className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+            <button className="p-3 hover:bg-gray-700/50 rounded-xl transition-all duration-200 group">
+              <Video className="w-5 h-5 text-gray-400 group-hover:text-blue-400 group-hover:scale-110 transition-all" />
             </button>
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+            <button className="p-3 hover:bg-gray-700/50 rounded-xl transition-all duration-200 group">
+              <MoreVertical className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:scale-110 transition-all" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent p-4 sm:p-6 space-y-4">
         {loading && messages.length === 0 && (
-          <div className="text-center py-8">
-            <div className="w-6 h-6 bg-blue-500 rounded-lg animate-pulse mx-auto mb-2"></div>
-            <p className="text-gray-400 text-sm">Loading messages...</p>
+          <div className="text-center py-12">
+            <div className="relative">
+              <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-r-blue-400/30 rounded-full animate-spin mx-auto mb-4" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+            </div>
+            <p className="text-gray-400 font-medium">Loading messages...</p>
           </div>
         )}
 
         {messages.length === 0 && !loading && (
-          <div className="text-center py-8">
-            <MessageCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">Start the conversation</h3>
-            <p className="text-gray-400 text-sm">
-              Send a message to {otherUser.name} to get started
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <MessageCircle className="w-10 h-10 text-blue-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-3">Start the conversation</h3>
+            <p className="text-gray-400 text-sm max-w-sm mx-auto leading-relaxed">
+              Send a message to <span className="text-blue-400 font-medium">{otherUser.name}</span> to get started and build a connection
             </p>
           </div>
         )}
@@ -232,13 +264,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
       </div>
 
       {/* Message Input */}
-      <div className="p-3 sm:p-4 border-t border-gray-800 bg-[#161b22]">
-        <div className="flex items-center space-x-2">
-          <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-            <Image className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+      <div className="p-4 sm:p-6 border-t border-gray-800/50 bg-gradient-to-r from-[#161b22]/80 to-[#1f2937]/50 backdrop-blur-sm">
+        <div className="flex items-center space-x-3">
+          <button className="p-3 hover:bg-gray-700/50 rounded-xl transition-all duration-200 group">
+            <Image className="w-5 h-5 text-gray-400 group-hover:text-blue-400 group-hover:scale-110 transition-all" />
           </button>
-          <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-            <Paperclip className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+          <button className="p-3 hover:bg-gray-700/50 rounded-xl transition-all duration-200 group">
+            <Paperclip className="w-5 h-5 text-gray-400 group-hover:text-green-400 group-hover:scale-110 transition-all" />
           </button>
           
           <div className="flex-1 relative">
@@ -249,16 +281,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm sm:text-base"
+              className="w-full px-4 py-3 bg-[#0d1117]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm sm:text-base transition-all duration-200 hover:bg-[#0d1117]"
             />
           </div>
           
           <button
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
-            className="p-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 disabled:hover:scale-100 group"
           >
-            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Send className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
       </div>

@@ -88,6 +88,12 @@ const AppContent: React.FC = () => {
             <HomePage />
           </React.Suspense>
         );
+      case "chat":
+        return (
+          <React.Suspense fallback={<LoadingFallback />}>
+            <ChatPage />
+          </React.Suspense>
+        );
       case "notes":
         return (
           <React.Suspense fallback={<LoadingFallback />}>

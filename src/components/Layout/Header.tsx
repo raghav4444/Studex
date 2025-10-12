@@ -25,6 +25,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
   const tabs = React.useMemo(
     () => [
       { id: "home", label: "Home", icon: Home },
+      { id: "chat", label: "Chat", icon: MessageCircle },
       { id: "notes", label: "Notes", icon: BookOpen },
       { id: "events", label: "Events", icon: Calendar },
       { id: "study-groups", label: "Groups", icon: Users },
