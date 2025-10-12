@@ -64,6 +64,11 @@ const CallModal: React.FC<CallModalProps> = ({
 
   // Get user info from the call invitation
   const getCallUserInfo = () => {
+    // Prioritize callUser if it has a proper name
+    if (callUser && callUser.name && callUser.name !== 'User') {
+      return callUser;
+    }
+    
     if (incomingCall) {
       return {
         name: `User ${(incomingCall.fromUserId || '').slice(-4)}`, // Fallback name
@@ -76,7 +81,7 @@ const CallModal: React.FC<CallModalProps> = ({
         id: outgoingCall.toUserId
       };
     }
-    return callUser;
+    return callUser || { name: 'Unknown User', id: 'unknown' };
   };
 
   const currentUser = getCallUserInfo();

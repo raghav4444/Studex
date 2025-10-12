@@ -21,6 +21,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [filePreviewUrls, setFilePreviewUrls] = useState<{ [key: string]: string }>({});
+  const [forceCloseCall, setForceCloseCall] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +81,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
       });
     };
   }, [filePreviewUrls]);
+
+  // Reset force close when call state changes
+  useEffect(() => {
+    if (!callState.isInCall) {
+      setForceCloseCall(false);
+    }
+  }, [callState.isInCall]);
 
   const handleSendMessage = async () => {
     if ((newMessage.trim() || selectedFiles.length > 0) && conversation.id) {
@@ -316,9 +324,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
   const handleEndCall = () => {
     console.log('🔴 Ending call...');
     try {
+      // Force end the call regardless of any errors
       endCall();
+      setForceCloseCall(true);
+      
     } catch (error) {
       console.error('Error ending call:', error);
+      // Force close the modal
+      setForceCloseCall(true);
     }
   };
 
@@ -695,7 +708,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
 
        {/* Call Modal */}
        <CallModal
-         isOpen={callState.isInCall}
+         isOpen={callState.isInCall && !forceCloseCall}
          callUser={otherUser || null}
          callType={callState.callType}
          callState={callState}
