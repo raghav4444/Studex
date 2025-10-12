@@ -66,13 +66,13 @@ const CallModal: React.FC<CallModalProps> = ({
   const getCallUserInfo = () => {
     if (incomingCall) {
       return {
-        name: `User ${incomingCall.fromUserId.slice(-4)}`, // Fallback name
+        name: `User ${(incomingCall.fromUserId || '').slice(-4)}`, // Fallback name
         id: incomingCall.fromUserId
       };
     }
     if (outgoingCall) {
       return {
-        name: `User ${outgoingCall.toUserId.slice(-4)}`, // Fallback name
+        name: `User ${(outgoingCall.toUserId || '').slice(-4)}`, // Fallback name
         id: outgoingCall.toUserId
       };
     }

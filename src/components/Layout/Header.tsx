@@ -93,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
 
           {/* Medium Desktop Navigation (md to lg) */}
           <nav className="hidden md:flex lg:hidden items-center space-x-1 bg-[#161b22]/60 backdrop-blur-2xl rounded-xl p-2 border border-gray-700/50 shadow-2xl ring-1 ring-white/5">
-            {tabs.slice(0, 6).map((tab) => {
+            {(tabs || []).slice(0, 6).map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
@@ -128,7 +128,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
               {/* Dropdown for additional tabs */}
               <div className="absolute top-full right-0 mt-2 w-48 bg-[#161b22]/95 backdrop-blur-xl rounded-lg border border-gray-700/50 shadow-2xl ring-1 ring-white/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                 <div className="p-2 space-y-1">
-                  {tabs.slice(6).map((tab) => {
+                  {(tabs || []).slice(6).map((tab) => {
                     const Icon = tab.icon;
                     return (
                       <button

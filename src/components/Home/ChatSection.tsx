@@ -267,7 +267,7 @@ const ChatSection: React.FC = () => {
           {/* Online Users */}
           <div className="flex items-center space-x-2">
             <div className="flex -space-x-1 sm:-space-x-2">
-              {onlineUsers.slice(0, 4).map((user) => (
+              {(onlineUsers || []).slice(0, 4).map((user) => (
                 <div
                   key={user.id}
                   className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-[#161b22] relative"

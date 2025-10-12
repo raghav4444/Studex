@@ -247,7 +247,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onNotificat
       <div className="max-h-80 overflow-y-auto">
         {filteredNotifications.length > 0 ? (
           <div className="divide-y divide-gray-800">
-            {filteredNotifications.slice(0, 10).map((notification) => (
+            {(filteredNotifications || []).slice(0, 10).map((notification) => (
               <div
                 key={notification.id}
                 className={`p-4 hover:bg-[#0d1117] transition-colors ${

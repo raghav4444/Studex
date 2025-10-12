@@ -187,7 +187,7 @@ const NotificationCenter: React.FC = () => {
     return notif.type === filter;
   });
 
-  const displayedNotifications = showAll ? filteredNotifications : filteredNotifications.slice(0, 5);
+  const displayedNotifications = showAll ? filteredNotifications : (filteredNotifications || []).slice(0, 5);
   const unreadCount = notifications.filter(notif => !notif.isRead).length;
 
   return (
