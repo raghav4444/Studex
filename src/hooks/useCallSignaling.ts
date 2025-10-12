@@ -31,18 +31,22 @@ export const useCallSignaling = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = supabase
-      .channel(`call_invitations_${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'call_invitations',
-        filter: `to_user_id=eq.${user.id}`,
-      }, (payload) => {
-        console.log('📞 Incoming call invitation:', payload.new);
-        const invitation = payload.new as CallInvitation;
-        setIncomingCall(invitation);
-      })
+    // Get the auth user ID (not profile ID)
+    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
+      if (!authUser) return;
+
+      const channel = supabase
+        .channel(`call_invitations_${authUser.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'call_invitations',
+          filter: `to_user_id=eq.${authUser.id}`,
+        }, (payload) => {
+          console.log('📞 Incoming call invitation:', payload.new);
+          const invitation = payload.new as CallInvitation;
+          setIncomingCall(invitation);
+        })
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
@@ -117,13 +121,24 @@ export const useCallSignaling = () => {
     callType: 'audio' | 'video',
     offer?: RTCSessionDescriptionInit
   ): Promise<string | null> => {
-    if (!user?.id) return null;
+    // Get the auth user ID (not profile ID)
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser?.id) {
+      console.error('No auth user ID available');
+      return null;
+    }
 
     try {
+      console.log('📞 Sending call invitation:', {
+        from: authUser.id,
+        to: toUserId,
+        type: callType
+      });
+
       const { data, error } = await supabase
         .from('call_invitations')
         .insert({
-          from_user_id: user.id,
+          from_user_id: authUser.id,
           to_user_id: toUserId,
           call_type: callType,
           status: 'pending',
@@ -132,24 +147,27 @@ export const useCallSignaling = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
-      console.log('📞 Call invitation sent:', data);
+      console.log('📞 Call invitation sent successfully:', data);
       setOutgoingCall(data);
       
-      // Set timeout to auto-reject after 30 seconds
+      // Set timeout to auto-reject after 60 seconds (increased from 30)
       setTimeout(() => {
-        if (data.status === 'pending') {
-          rejectCall(data.id);
-        }
-      }, 30000);
+        console.log('⏰ Call timeout - auto rejecting');
+        rejectCallInvitation(data.id);
+      }, 60000);
 
       return data.id;
     } catch (error) {
       console.error('Error sending call invitation:', error);
+      alert(`Failed to send call: ${error.message || 'Unknown error'}`);
       return null;
     }
-  }, [user?.id]);
+  }, []);
 
   // Accept call invitation
   const acceptCallInvitation = useCallback(async (

@@ -126,7 +126,7 @@ export const useWebRTC = () => {
   // Start a call
   const startCall = useCallback(async (user: CallUser, type: 'audio' | 'video') => {
     try {
-      console.log(`Starting ${type} call with ${user.name}`);
+      console.log(`📞 Starting ${type} call with ${user.name} (ID: ${user.id})`);
       
       setCallState(prev => ({
         ...prev,
@@ -135,10 +135,14 @@ export const useWebRTC = () => {
       }));
 
       // Get local media
+      console.log('🎥 Getting local media...');
       const stream = await getUserMedia(type === 'video', true);
+      console.log('✅ Local media obtained');
       
       // Create peer connection
+      console.log('🔗 Creating peer connection...');
       const peerConnection = createPeerConnection();
+      console.log('✅ Peer connection created');
       
       // Add local stream to peer connection
       stream.getTracks().forEach(track => {
@@ -146,10 +150,13 @@ export const useWebRTC = () => {
       });
 
       // Create offer
+      console.log('📝 Creating offer...');
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
+      console.log('✅ Offer created and set');
 
       // Send call invitation with offer
+      console.log('📤 Sending call invitation...');
       const invitationId = await sendCallInvitation(user.id, type, offer);
       
       if (invitationId) {
@@ -157,13 +164,14 @@ export const useWebRTC = () => {
           ...prev,
           currentInvitation: { id: invitationId } as CallInvitation,
         }));
-        console.log('📞 Call invitation sent successfully');
+        console.log('✅ Call invitation sent successfully, ID:', invitationId);
       } else {
-        throw new Error('Failed to send call invitation');
+        throw new Error('Failed to send call invitation - no invitation ID returned');
       }
 
     } catch (error) {
-      console.error('Error starting call:', error);
+      console.error('❌ Error starting call:', error);
+      alert(`Failed to start call: ${error.message || 'Unknown error'}`);
       setCallState(prev => ({
         ...prev,
         isInCall: false,

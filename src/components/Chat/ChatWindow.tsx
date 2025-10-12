@@ -4,6 +4,7 @@ import { useAuth } from '../AuthProvider';
 import { Conversation, Message } from '../../types';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import CallModal from '../Call/CallModal';
+import { supabase } from '../../lib/supabase';
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -19,6 +20,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [filePreviewUrls, setFilePreviewUrls] = useState<{ [key: string]: string }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,6 +72,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Cleanup preview URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      Object.values(filePreviewUrls).forEach(url => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [filePreviewUrls]);
+
   const handleSendMessage = async () => {
     if ((newMessage.trim() || selectedFiles.length > 0) && conversation.id) {
       setUploadingFiles(true);
@@ -80,26 +91,32 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
             const isImage = file.type.startsWith('image/');
             const messageType = isImage ? 'image' : 'file';
             
-            // For now, we'll use a simple file URL (in production, upload to storage first)
-            const fileUrl = URL.createObjectURL(file);
+            // Upload file to Supabase Storage first
+            const fileUrl = await uploadFileToStorage(file);
             
-            await sendMessage(
-              conversation.id, 
-              newMessage.trim() || (isImage ? '📷 Image' : `📎 ${file.name}`),
-              messageType,
-              fileUrl,
-              file.name,
-              file.type
-            );
+            if (fileUrl) {
+              await sendMessage(
+                conversation.id, 
+                newMessage.trim() || (isImage ? '📷 Image' : `📎 ${file.name}`),
+                messageType,
+                fileUrl,
+                file.name,
+                file.type
+              );
+            } else {
+              console.error('Failed to upload file:', file.name);
+              alert(`Failed to upload ${file.name}. Please try again.`);
+            }
           }
           setSelectedFiles([]);
         } else {
           // Send text message
           await sendMessage(conversation.id, newMessage.trim());
         }
-        setNewMessage('');
+    setNewMessage('');
       } catch (error) {
         console.error('Error sending message:', error);
+        alert('Failed to send message. Please try again.');
       } finally {
         setUploadingFiles(false);
       }
@@ -109,6 +126,39 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSendMessage();
+    }
+  };
+
+  const uploadFileToStorage = async (file: File): Promise<string | null> => {
+    try {
+      // Create a unique filename with timestamp and random string
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${timestamp}_${randomString}.${fileExtension}`;
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('chat-files')
+        .upload(`conversation_${conversation.id}/${fileName}`, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Error uploading file:', error);
+        return null;
+      }
+
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('chat-files')
+        .getPublicUrl(data.path);
+
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Error in uploadFileToStorage:', error);
+      return null;
     }
   };
 
@@ -150,10 +200,34 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
 
     if (validFiles.length > 0) {
       setSelectedFiles(prev => [...prev, ...validFiles]);
+      
+      // Create preview URLs for images
+      validFiles.forEach(file => {
+        if (file.type.startsWith('image/')) {
+          const previewUrl = URL.createObjectURL(file);
+          setFilePreviewUrls(prev => ({
+            ...prev,
+            [file.name]: previewUrl
+          }));
+        }
+      });
     }
   };
 
   const removeFile = (index: number) => {
+    const fileToRemove = selectedFiles[index];
+    if (fileToRemove && fileToRemove.type.startsWith('image/')) {
+      // Clean up preview URL
+      const previewUrl = filePreviewUrls[fileToRemove.name];
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setFilePreviewUrls(prev => {
+        const newUrls = { ...prev };
+        delete newUrls[fileToRemove.name];
+        return newUrls;
+      });
+    }
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -205,15 +279,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
   };
 
   // Call handler functions
-  const handleStartAudioCall = () => {
+  const handleStartAudioCall = async () => {
     if (otherUser) {
-      startCall(otherUser, 'audio');
+      // The otherUser.id is already the auth user_id from the profiles table
+      const callUser = {
+        id: otherUser.id, // This is the auth user_id
+        name: otherUser.name,
+        avatar: otherUser.avatar
+      };
+      console.log('📞 Starting audio call with user:', callUser);
+      startCall(callUser, 'audio');
     }
   };
 
-  const handleStartVideoCall = () => {
+  const handleStartVideoCall = async () => {
     if (otherUser) {
-      startCall(otherUser, 'video');
+      // The otherUser.id is already the auth user_id from the profiles table
+      const callUser = {
+        id: otherUser.id, // This is the auth user_id
+        name: otherUser.name,
+        avatar: otherUser.avatar
+      };
+      console.log('📞 Starting video call with user:', callUser);
+      startCall(callUser, 'video');
     }
   };
 
@@ -291,10 +379,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
               {message.messageType === 'image' && (
                 <div>
                   <img
-                     src={message.fileUrl || ''}
+                    src={message.fileUrl || ''}
                     alt="Shared image"
-                     className="max-w-xs max-h-64 rounded-lg object-cover cursor-pointer"
-                     onClick={() => window.open(message.fileUrl || '', '_blank')}
+                    className="max-w-xs max-h-64 rounded-lg object-cover cursor-pointer"
+                    onClick={() => window.open(message.fileUrl || '', '_blank')}
+                    onError={(e) => {
+                      console.error('Failed to load image:', message.fileUrl);
+                      e.currentTarget.style.display = 'none';
+                      // Show error message
+                      const errorDiv = document.createElement('div');
+                      errorDiv.className = 'p-4 bg-red-900/20 border border-red-500 rounded-lg text-red-300 text-sm';
+                      errorDiv.textContent = 'Failed to load image';
+                      e.currentTarget.parentNode?.appendChild(errorDiv);
+                    }}
+                    onLoad={() => {
+                      // Image loaded successfully
+                      console.log('Image loaded successfully:', message.fileUrl);
+                    }}
                   />
                    {message.content && message.content !== '📷 Image' && (
                     <p className="text-sm mt-2">{message.content}</p>
@@ -314,7 +415,32 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
                     )}
                   </div>
                    <button
-                     onClick={() => window.open(message.fileUrl || '', '_blank')}
+                     onClick={async () => {
+                       if (message.fileUrl) {
+                         try {
+                           // Try to download the file
+                           const response = await fetch(message.fileUrl);
+                           if (response.ok) {
+                             const blob = await response.blob();
+                             const url = window.URL.createObjectURL(blob);
+                             const a = document.createElement('a');
+                             a.href = url;
+                             a.download = message.fileName || 'download';
+                             document.body.appendChild(a);
+                             a.click();
+                             window.URL.revokeObjectURL(url);
+                             document.body.removeChild(a);
+                           } else {
+                             // Fallback to opening in new tab
+                             window.open(message.fileUrl, '_blank');
+                           }
+                         } catch (error) {
+                           console.error('Error downloading file:', error);
+                           // Fallback to opening in new tab
+                           window.open(message.fileUrl, '_blank');
+                         }
+                       }
+                     }}
                      className="flex-shrink-0 p-1 hover:bg-gray-600/40 rounded transition-colors"
                      title="Download file"
                    >
@@ -414,22 +540,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
                title="Start audio call"
              >
                <Phone className="w-5 h-5 text-gray-400" />
-             </button>
+            </button>
              <button 
                onClick={handleStartVideoCall}
                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
                title="Start video call"
              >
                <Video className="w-5 h-5 text-gray-400" />
-             </button>
-             <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+            </button>
+            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
                <MoreVertical className="w-5 h-5 text-gray-400" />
-             </button>
-           </div>
+            </button>
+          </div>
         </div>
       </div>
 
-       {/* Messages */}
+      {/* Messages */}
        <div 
          className="flex-1 overflow-y-auto p-4 bg-[#0d1117] min-h-0 overflow-x-hidden"
          onDragEnter={handleDragEnter}
@@ -467,9 +593,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
                <div key={index} className="flex items-center space-x-2 bg-[#0d1117] rounded-lg p-2 border border-gray-700">
                  {file.type.startsWith('image/') ? (
                    <img
-                     src={URL.createObjectURL(file)}
+                     src={filePreviewUrls[file.name] || ''}
                      alt={file.name}
                      className="w-8 h-8 rounded object-cover"
+                     onError={(e) => {
+                       console.error('Failed to load image preview:', file.name);
+                       e.currentTarget.style.display = 'none';
+                     }}
                    />
                  ) : (
                    <div className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center">
@@ -556,7 +686,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
            onChange={(e) => handleFileSelect(e.target.files)}
            className="hidden"
          />
-       </div>
+      </div>
 
        {/* Call Modal */}
        <CallModal
@@ -575,8 +705,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
          localVideoRef={localVideoRef}
          remoteVideoRef={remoteVideoRef}
        />
-     </div>
-   );
- };
- 
- export default ChatWindow;
+    </div>
+  );
+};
+
+export default ChatWindow;
