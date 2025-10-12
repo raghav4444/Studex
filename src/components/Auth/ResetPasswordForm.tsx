@@ -102,6 +102,8 @@ const ResetPasswordForm: React.FC = () => {
 
       if (error) throw error;
 
+      // Sign out and redirect to login after successful password reset
+      await supabase.auth.signOut();
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reset password. Please try again.');
