@@ -67,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1 bg-[#161b22]/60 backdrop-blur-2xl rounded-xl p-2 border border-gray-700/50 shadow-2xl ring-1 ring-white/5">
-            {tabs.slice(0, 8).map((tab) => {
+            {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
