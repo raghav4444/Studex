@@ -27,14 +27,31 @@ const ResetPasswordForm: React.FC = () => {
         if (data.session) {
           console.log('Valid session found for password reset');
           setIsValidSession(true);
-        } else {
-          // Try to get the session from URL hash/fragment
-          const urlParams = new URLSearchParams(window.location.search);
-          const accessToken = urlParams.get('access_token');
-          const refreshToken = urlParams.get('refresh_token');
-          const type = urlParams.get('type');
+               } else {
+                 // Try to get the session from URL hash/fragment
+                 const urlParams = new URLSearchParams(window.location.search);
+                 const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                 
+                 // Check query parameters first, then hash
+                 let accessToken = urlParams.get('access_token');
+                 let refreshToken = urlParams.get('refresh_token');
+                 let type = urlParams.get('type');
+                 
+                 if (!type || !accessToken || !refreshToken) {
+                   type = hashParams.get('type');
+                   accessToken = hashParams.get('access_token');
+                   refreshToken = hashParams.get('refresh_token');
+                 }
 
-          if (type === 'recovery' && accessToken && refreshToken) {
+                 console.log('🔍 ResetPasswordForm: Found tokens:', {
+                   type,
+                   hasAccessToken: !!accessToken,
+                   hasRefreshToken: !!refreshToken,
+                   search: window.location.search,
+                   hash: window.location.hash
+                 });
+
+                 if (type === 'recovery' && accessToken && refreshToken) {
             console.log('Found recovery tokens in URL, setting session...');
             const { error: sessionError } = await supabase.auth.setSession({
               access_token: accessToken,

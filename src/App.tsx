@@ -31,6 +31,7 @@ const NotificationsPage = React.lazy(
 );
 const ChatPage = React.lazy(() => import("./components/Chat/ChatPage"));
 const ResetPasswordForm = React.lazy(() => import("./components/Auth/ResetPasswordForm"));
+const PasswordResetDebug = React.lazy(() => import("./components/Auth/PasswordResetDebug"));
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
@@ -40,18 +41,58 @@ const AppContent: React.FC = () => {
 
   // Check if we're on a password reset URL
   useEffect(() => {
+    // Check both query parameters and URL hash (fragment)
     const urlParams = new URLSearchParams(window.location.search);
-    const type = urlParams.get('type');
-    const accessToken = urlParams.get('access_token');
-    const refreshToken = urlParams.get('refresh_token');
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    // Check query parameters first
+    let type = urlParams.get('type');
+    let accessToken = urlParams.get('access_token');
+    let refreshToken = urlParams.get('refresh_token');
+    
+    // If not found in query params, check hash
+    if (!type || !accessToken || !refreshToken) {
+      type = hashParams.get('type');
+      accessToken = hashParams.get('access_token');
+      refreshToken = hashParams.get('refresh_token');
+    }
+
+    console.log('🔍 Checking password reset URL:', {
+      type,
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      search: window.location.search,
+      hash: window.location.hash
+    });
 
     if (type === 'recovery' && accessToken && refreshToken) {
+      console.log('✅ Password reset detected, showing reset form');
       setShowResetPassword(true);
+    }
+    
+    // Debug: If we're on the debug route, show debug info instead
+    if (window.location.pathname.includes('/debug-reset')) {
+      setShowResetPassword('debug');
     }
   }, []);
 
   // Show reset password form if we're on a reset URL
   if (showResetPassword) {
+    if (showResetPassword === 'debug') {
+      return (
+        <React.Suspense fallback={
+          <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg animate-pulse mx-auto mb-4"></div>
+              <p className="text-gray-400">Loading...</p>
+            </div>
+          </div>
+        }>
+          <PasswordResetDebug />
+        </React.Suspense>
+      );
+    }
+    
     return (
       <React.Suspense fallback={
         <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
