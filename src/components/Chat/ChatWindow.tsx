@@ -326,7 +326,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
     try {
       // Force end the call regardless of any errors
       endCall();
+      
+      // Force close immediately
       setForceCloseCall(true);
+      
+      // Also try to clear incoming/outgoing calls
+      if (incomingCall) {
+        rejectCall();
+      }
       
     } catch (error) {
       console.error('Error ending call:', error);
@@ -708,7 +715,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
 
        {/* Call Modal */}
        <CallModal
-         isOpen={callState.isInCall && !forceCloseCall}
+         isOpen={(callState.isInCall || !!incomingCall) && !forceCloseCall}
          callUser={otherUser || null}
          callType={callState.callType}
          callState={callState}

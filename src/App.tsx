@@ -32,6 +32,7 @@ const NotificationsPage = React.lazy(
 const ChatPage = React.lazy(() => import("./components/Chat/ChatPage"));
 const ResetPasswordForm = React.lazy(() => import("./components/Auth/ResetPasswordForm"));
 const PasswordResetDebug = React.lazy(() => import("./components/Auth/PasswordResetDebug"));
+const GlobalCallNotification = React.lazy(() => import("./components/Call/GlobalCallNotification"));
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
@@ -234,6 +235,11 @@ const AppContent: React.FC = () => {
         <Header activeTab={activeTab} onTabChange={setActiveTab} />
       </React.Suspense>
       <main className="pb-20 md:pb-8">{renderContent()}</main>
+      
+      {/* Global Call Notification */}
+      <React.Suspense fallback={null}>
+        <GlobalCallNotification />
+      </React.Suspense>
     </div>
   );
 };
