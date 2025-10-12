@@ -47,34 +47,35 @@ export const useCallSignaling = () => {
           const invitation = payload.new as CallInvitation;
           setIncomingCall(invitation);
         })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'call_invitations',
-        filter: `to_user_id=eq.${user.id}`,
-      }, (payload) => {
-        console.log('📞 Call invitation updated:', payload.new);
-        const invitation = payload.new as CallInvitation;
-        
-        if (invitation.status === 'accepted') {
-          // Remote user accepted our call
-          setOutgoingCall(null);
-          // Handle call acceptance logic here
-        } else if (invitation.status === 'rejected') {
-          // Remote user rejected our call
-          setOutgoingCall(null);
-          alert(`${getUserNameById(invitation.fromUserId)} rejected your call`);
-        } else if (invitation.status === 'ended') {
-          // Call ended
-          setIncomingCall(null);
-          setOutgoingCall(null);
-        }
-      })
-      .subscribe();
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'call_invitations',
+          filter: `to_user_id=eq.${authUser.id}`,
+        }, (payload) => {
+          console.log('📞 Call invitation updated:', payload.new);
+          const invitation = payload.new as CallInvitation;
+          
+          if (invitation.status === 'accepted') {
+            // Remote user accepted our call
+            setOutgoingCall(null);
+            // Handle call acceptance logic here
+          } else if (invitation.status === 'rejected') {
+            // Remote user rejected our call
+            setOutgoingCall(null);
+            alert(`${getUserNameById(invitation.fromUserId)} rejected your call`);
+          } else if (invitation.status === 'ended') {
+            // Call ended
+            setIncomingCall(null);
+            setOutgoingCall(null);
+          }
+        })
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    });
   }, [user?.id]);
 
   // Listen for call responses on outgoing calls
