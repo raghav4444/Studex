@@ -16,8 +16,8 @@ interface CallModalProps {
   callUser: CallUser | null;
   callType: 'audio' | 'video' | null;
   callState: ReturnType<typeof useWebRTC>['callState'];
-  incomingCall: CallUser | null;
-  outgoingCall: CallUser | null;
+  incomingCall: any; // CallInvitation from useCallSignaling
+  outgoingCall: any; // CallInvitation from useCallSignaling
   onAccept: () => void;
   onReject: () => void;
   onEnd: () => void;
@@ -62,7 +62,24 @@ const CallModal: React.FC<CallModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentUser = incomingCall || outgoingCall || callUser;
+  // Get user info from the call invitation
+  const getCallUserInfo = () => {
+    if (incomingCall) {
+      return {
+        name: `User ${incomingCall.fromUserId.slice(-4)}`, // Fallback name
+        id: incomingCall.fromUserId
+      };
+    }
+    if (outgoingCall) {
+      return {
+        name: `User ${outgoingCall.toUserId.slice(-4)}`, // Fallback name
+        id: outgoingCall.toUserId
+      };
+    }
+    return callUser;
+  };
+
+  const currentUser = getCallUserInfo();
   const isIncoming = !!incomingCall;
   const isOutgoing = !!outgoingCall && !callState.isCallActive;
 
@@ -103,9 +120,9 @@ const CallModal: React.FC<CallModalProps> = ({
           </h2>
           
           <p className="text-gray-400">
-            {isIncoming && `Incoming ${callType} call`}
+            {isIncoming && `Incoming ${incomingCall?.callType} call`}
             {isOutgoing && `Calling...`}
-            {callState.isCallActive && `${callType} call`}
+            {callState.isCallActive && `${callState.callType} call`}
           </p>
 
           {/* Call duration for active calls */}

@@ -218,9 +218,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
   };
 
   const handleAcceptCall = () => {
-    if (incomingCall && callState.callType) {
-      acceptCall(incomingCall, callState.callType);
-    }
+    acceptCall();
   };
 
   const handleRejectCall = () => {
@@ -566,8 +564,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
          callUser={otherUser || null}
          callType={callState.callType}
          callState={callState}
-         incomingCall={incomingCall}
-         outgoingCall={outgoingCall}
+         incomingCall={incomingCall as any}
+         outgoingCall={outgoingCall as any}
          onAccept={handleAcceptCall}
          onReject={handleRejectCall}
          onEnd={handleEndCall}

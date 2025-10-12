@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallSignaling, CallInvitation } from './useCallSignaling';
 
 export interface CallState {
   isInCall: boolean;
@@ -10,6 +11,7 @@ export interface CallState {
   remoteStream: MediaStream | null;
   localStream: MediaStream | null;
   peerConnection: RTCPeerConnection | null;
+  currentInvitation: CallInvitation | null;
 }
 
 export interface CallUser {
@@ -29,13 +31,25 @@ export const useWebRTC = () => {
     remoteStream: null,
     localStream: null,
     peerConnection: null,
+    currentInvitation: null,
   });
 
-  const [incomingCall, setIncomingCall] = useState<CallUser | null>(null);
-  const [outgoingCall, setOutgoingCall] = useState<CallUser | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+
+  // Initialize signaling
+  const {
+    incomingCall,
+    outgoingCall,
+    callUsers,
+    sendCallInvitation,
+    acceptCallInvitation,
+    rejectCallInvitation,
+    endCall,
+    sendIceCandidate,
+    getOnlineUsers,
+  } = useCallSignaling();
 
   // WebRTC Configuration
   const rtcConfig = {
@@ -114,7 +128,6 @@ export const useWebRTC = () => {
     try {
       console.log(`Starting ${type} call with ${user.name}`);
       
-      setOutgoingCall(user);
       setCallState(prev => ({
         ...prev,
         isInCall: true,
@@ -136,35 +149,39 @@ export const useWebRTC = () => {
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
 
-      // In a real app, you'd send the offer to the remote peer via signaling server
-      console.log('Call offer created:', offer);
-
-      // Simulate call acceptance after 2 seconds (for demo)
-      setTimeout(() => {
-        acceptCall(user, type);
-      }, 2000);
+      // Send call invitation with offer
+      const invitationId = await sendCallInvitation(user.id, type, offer);
+      
+      if (invitationId) {
+        setCallState(prev => ({
+          ...prev,
+          currentInvitation: { id: invitationId } as CallInvitation,
+        }));
+        console.log('📞 Call invitation sent successfully');
+      } else {
+        throw new Error('Failed to send call invitation');
+      }
 
     } catch (error) {
       console.error('Error starting call:', error);
-      setOutgoingCall(null);
       setCallState(prev => ({
         ...prev,
         isInCall: false,
         callType: null,
+        currentInvitation: null,
       }));
     }
-  }, [getUserMedia, createPeerConnection]);
+  }, [getUserMedia, createPeerConnection, sendCallInvitation]);
 
   // Accept incoming call
-  const acceptCall = useCallback(async (user: CallUser, type: 'audio' | 'video') => {
+  const acceptCall = useCallback(async () => {
+    if (!incomingCall) return;
+    
     try {
-      console.log(`Accepting ${type} call from ${user.name}`);
-      
-      setIncomingCall(null);
-      setOutgoingCall(null);
+      console.log(`Accepting ${incomingCall.callType} call from ${incomingCall.fromUserId}`);
       
       // Get local media
-      const stream = await getUserMedia(type === 'video', true);
+      const stream = await getUserMedia(incomingCall.callType === 'video', true);
       
       // Create peer connection
       const peerConnection = createPeerConnection();
@@ -174,34 +191,56 @@ export const useWebRTC = () => {
         peerConnection.addTrack(track, stream);
       });
 
-      // In a real app, you'd handle the offer/answer exchange here
-      // For demo, we'll simulate a successful connection
+      // Set remote description if offer exists
+      if (incomingCall.offer) {
+        await peerConnection.setRemoteDescription(incomingCall.offer);
+      }
+
+      // Create answer
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+
+      // Send answer to caller
+      await acceptCallInvitation(incomingCall.id, answer);
+
       setCallState(prev => ({
         ...prev,
         isCallActive: true,
-        callType: type,
+        callType: incomingCall.callType,
+        currentInvitation: incomingCall,
       }));
 
     } catch (error) {
       console.error('Error accepting call:', error);
-      endCall();
+      if (incomingCall) {
+        await rejectCallInvitation(incomingCall.id);
+      }
     }
-  }, [getUserMedia, createPeerConnection]);
+  }, [incomingCall, getUserMedia, createPeerConnection, acceptCallInvitation, rejectCallInvitation]);
 
   // Reject incoming call
-  const rejectCall = useCallback(() => {
+  const rejectCall = useCallback(async () => {
+    if (!incomingCall) return;
+    
     console.log('Rejecting incoming call');
-    setIncomingCall(null);
+    await rejectCallInvitation(incomingCall.id);
+    
     setCallState(prev => ({
       ...prev,
       isInCall: false,
       callType: null,
+      currentInvitation: null,
     }));
-  }, []);
+  }, [incomingCall, rejectCallInvitation]);
 
   // End current call
-  const endCall = useCallback(() => {
+  const endCallLocal = useCallback(async () => {
     console.log('Ending call');
+    
+    // End call in database if we have an active invitation
+    if (callState.currentInvitation) {
+      await endCall(callState.currentInvitation.id);
+    }
     
     // Stop local stream
     if (callState.localStream) {
@@ -225,11 +264,9 @@ export const useWebRTC = () => {
       remoteStream: null,
       localStream: null,
       peerConnection: null,
+      currentInvitation: null,
     });
-    
-    setIncomingCall(null);
-    setOutgoingCall(null);
-  }, [callState.localStream]);
+  }, [callState.localStream, callState.currentInvitation, endCall]);
 
   // Toggle audio
   const toggleAudio = useCallback(() => {
@@ -324,10 +361,11 @@ export const useWebRTC = () => {
     startCall,
     acceptCall,
     rejectCall,
-    endCall,
+    endCall: endCallLocal,
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
-    simulateIncomingCall,
+    callUsers,
+    getOnlineUsers,
   };
 };
