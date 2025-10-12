@@ -14,6 +14,7 @@ const ChatList: React.FC<ChatListProps> = ({ onConversationSelect, chatHook }) =
   const { user } = useAuth();
   const { conversations, loading, fetchConversations, startConversation } = chatHook;
   const [showUserSearch, setShowUserSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     console.log('🔍 ChatList: Conversations state updated:', {
@@ -30,14 +31,12 @@ const ChatList: React.FC<ChatListProps> = ({ onConversationSelect, chatHook }) =
       console.log('🔍 Conversation ID:', conversationId);
       
       if (conversationId) {
-        // Find the conversation and select it
         const conversation = conversations.find(c => c.id === conversationId);
         console.log('🔍 Found conversation:', conversation);
         
         if (conversation) {
           onConversationSelect(conversation);
         } else {
-          // If conversation not found in current list, refresh conversations
           console.log('🔄 Conversation not found, refreshing...');
           await fetchConversations();
         }
@@ -88,69 +87,82 @@ const ChatList: React.FC<ChatListProps> = ({ onConversationSelect, chatHook }) =
     return conversation.participants.find(p => p.id !== user?.id);
   };
 
+  const filteredConversations = conversations.filter(conversation => {
+    const otherUser = getOtherParticipant(conversation);
+    if (!otherUser) return false;
+    
+    return otherUser.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           formatLastMessage(conversation).toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-[#0d1117] to-[#161b22]">
+    <div className="flex flex-col h-full bg-[#161b22]">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-gray-800/50 bg-gradient-to-r from-[#0d1117] to-[#161b22]/30">
+      <div className="p-4 border-b border-gray-800 bg-[#161b22]">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Messages
-            </h1>
-            <p className="text-gray-400 text-sm mt-1">Connect with your peers</p>
-          </div>
+          <h1 className="text-xl font-semibold text-white">Messages</h1>
           <button
             onClick={() => setShowUserSearch(true)}
-            className="group p-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+            className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
           >
-            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
+            <Plus className="w-5 h-5" />
           </button>
         </div>
         
         {/* Search Bar */}
-        <div className="relative group">
-          <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search conversations..."
-            className="w-full pl-12 pr-4 py-3 bg-[#161b22]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm sm:text-base transition-all duration-200 hover:bg-[#161b22]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
       </div>
 
       {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto min-h-0">
         {loading && (
-          <div className="p-8 text-center">
-            <div className="relative">
-              <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="absolute inset-0 w-8 h-8 border-4 border-transparent border-r-blue-400/30 rounded-full animate-spin mx-auto mb-4" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
-            </div>
-            <p className="text-gray-400 text-sm font-medium">Loading conversations...</p>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         )}
 
-        {!loading && conversations.length === 0 && (
-          <div className="p-8 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <MessageCircle className="w-10 h-10 text-blue-400" />
+        {!loading && filteredConversations.length === 0 && !searchQuery && (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+              <MessageCircle className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-3">No conversations yet</h3>
-            <p className="text-gray-400 text-sm mb-6 max-w-sm mx-auto leading-relaxed">
-              Start a conversation with someone from your college and build meaningful connections
+            <h3 className="text-lg font-medium text-white mb-2">No conversations yet</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Start a conversation with someone from your college
             </p>
             <button
               onClick={() => setShowUserSearch(true)}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               Start Chatting
             </button>
           </div>
         )}
 
-        {!loading && conversations.length > 0 && (
-          <div className="space-y-2 p-2">
-            {conversations.map((conversation, index) => {
+        {!loading && filteredConversations.length === 0 && searchQuery && (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+              <Search className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-white mb-2">No conversations found</h3>
+            <p className="text-gray-400 text-sm">
+              Try a different search term
+            </p>
+          </div>
+        )}
+
+        {!loading && filteredConversations.length > 0 && (
+          <div className="p-2">
+            {filteredConversations.map((conversation) => {
               const otherUser = getOtherParticipant(conversation);
               if (!otherUser) return null;
 
@@ -158,62 +170,56 @@ const ChatList: React.FC<ChatListProps> = ({ onConversationSelect, chatHook }) =
                 <button
                   key={conversation.id}
                   onClick={() => handleConversationClick(conversation)}
-                  className="group w-full p-4 hover:bg-gradient-to-r hover:from-[#161b22]/50 hover:to-[#1f2937]/30 transition-all duration-200 text-left rounded-xl mx-2 hover:shadow-lg hover:scale-[1.02] border border-transparent hover:border-gray-700/30"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="w-full p-3 hover:bg-gray-800 transition-colors text-left rounded-lg mb-1"
                 >
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3">
                     {/* Avatar */}
                     <div className="relative flex-shrink-0">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
                         {otherUser.avatar ? (
                           <img
                             src={otherUser.avatar}
                             alt={otherUser.name}
-                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover"
+                            className="w-12 h-12 rounded-full object-cover"
                           />
                         ) : (
-                          <User className="w-6 h-6 sm:w-7 sm:h-7 text-gray-400" />
+                          <User className="w-6 h-6 text-gray-400" />
                         )}
                       </div>
                       {otherUser.lastActive && new Date().getTime() - otherUser.lastActive.getTime() < 300000 && (
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#0d1117] shadow-lg">
-                          <div className="w-full h-full bg-green-400 rounded-full animate-pulse"></div>
-                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#161b22]"></div>
                       )}
                     </div>
 
                     {/* Conversation Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-white font-medium truncate">
+                          {otherUser.name}
+                        </p>
                         <div className="flex items-center space-x-2">
-                          <p className="text-white font-semibold truncate text-base group-hover:text-blue-100 transition-colors">
-                            {otherUser.name}
-                          </p>
-                          <span className="text-gray-500 text-xs hidden sm:inline bg-gray-800/50 px-2 py-1 rounded-full">
-                            @{otherUser.username}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-500 text-xs font-medium bg-gray-800/30 px-2 py-1 rounded-full">
+                          <span className="text-xs text-gray-400">
                             {formatTime(conversation.updatedAt)}
                           </span>
                           {conversation.unreadCount > 0 && (
-                            <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg">
+                            <div className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
                               {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
                             </div>
                           )}
                         </div>
                       </div>
                       
-                      <p className="text-gray-400 text-sm truncate mb-2 group-hover:text-gray-300 transition-colors">
+                      <p className="text-sm text-gray-400 truncate">
                         {formatLastMessage(conversation)}
                       </p>
                       
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <Clock className="w-3 h-3" />
-                        <span className="truncate">
-                          {otherUser.college} • {otherUser.branch} • Year {otherUser.year}
-                        </span>
+                      <div className="flex items-center space-x-1 mt-1">
+                        <Clock className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                         <span className="text-xs text-gray-500 truncate">
+                           {otherUser.college && otherUser.college.length > 10 
+                             ? `${otherUser.college.substring(0, 10)}...` 
+                             : otherUser.college} • {otherUser.branch}
+                         </span>
                       </div>
                     </div>
                   </div>
