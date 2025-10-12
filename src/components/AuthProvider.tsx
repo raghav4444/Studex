@@ -8,6 +8,7 @@ interface AuthContextType {
   signUp: (userData: { name: string; email: string; password: string; college: string; branch: string; year: number; bio?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
+  resetPassword: (email: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
 }
 

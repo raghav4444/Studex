@@ -335,6 +335,26 @@ export const useSupabaseAuth = () => {
     setUser({ ...user, ...updates });
   };
 
+  const resetPassword = async (email: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      return { success: true, message: 'Password reset email sent! Check your inbox.' };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message || "Failed to send password reset email");
+      }
+      throw new Error("Failed to send password reset email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const createMissingProfile = async () => {
     if (!session?.user) {
       console.error("❌ No authenticated user to create profile for");
@@ -393,6 +413,7 @@ export const useSupabaseAuth = () => {
     signIn, // Ensure this is exported for external usage
     signOut, // Ensure this is exported for external usage
     updateProfile,
+    resetPassword, // Add password reset function
     createMissingProfile, // Add this new function
   };
 };

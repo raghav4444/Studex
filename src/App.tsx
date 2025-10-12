@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AuthProvider } from "./components/AuthProvider";
 import { useAuth } from "./components/AuthProvider"; // Ensure this hook is correctly implemented and returns { user, loading }
 
@@ -30,11 +30,41 @@ const NotificationsPage = React.lazy(
   () => import("./components/Notifications/NotificationsPage")
 );
 const ChatPage = React.lazy(() => import("./components/Chat/ChatPage"));
+const ResetPasswordForm = React.lazy(() => import("./components/Auth/ResetPasswordForm"));
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("home");
   const [showAuth, setShowAuth] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+
+  // Check if we're on a password reset URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+    const accessToken = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+
+    if (type === 'recovery' && accessToken && refreshToken) {
+      setShowResetPassword(true);
+    }
+  }, []);
+
+  // Show reset password form if we're on a reset URL
+  if (showResetPassword) {
+    return (
+      <React.Suspense fallback={
+        <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 bg-blue-500 rounded-lg animate-pulse mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading...</p>
+          </div>
+        </div>
+      }>
+        <ResetPasswordForm />
+      </React.Suspense>
+    );
+  }
 
   if (loading) {
     return (
