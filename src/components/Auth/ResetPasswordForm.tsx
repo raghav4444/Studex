@@ -122,7 +122,12 @@ const ResetPasswordForm: React.FC = () => {
             Your password has been successfully updated. You can now sign in with your new password.
           </p>
           <button
-            onClick={() => window.location.href = '/auth'}
+            onClick={() => {
+              // Redirect to the correct path based on environment
+              const isDevelopment = window.location.hostname === 'localhost';
+              const basePath = isDevelopment ? '/' : '/Studex/';
+              window.location.href = basePath;
+            }}
             className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
           >
             Go to Sign In
