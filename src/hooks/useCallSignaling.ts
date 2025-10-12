@@ -35,46 +35,58 @@ export const useCallSignaling = () => {
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
       if (!authUser) return;
 
-      const channel = supabase
-        .channel(`call_invitations_${authUser.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'call_invitations',
-          filter: `to_user_id=eq.${authUser.id}`,
-        }, (payload) => {
-          console.log('📞 Incoming call invitation:', payload.new);
-          const invitation = payload.new as CallInvitation;
-          setIncomingCall(invitation);
-        })
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'call_invitations',
-          filter: `to_user_id=eq.${authUser.id}`,
-        }, (payload) => {
-          console.log('📞 Call invitation updated:', payload.new);
-          const invitation = payload.new as CallInvitation;
-          
-          if (invitation.status === 'accepted') {
-            // Remote user accepted our call
-            setOutgoingCall(null);
-            // Handle call acceptance logic here
-          } else if (invitation.status === 'rejected') {
-            // Remote user rejected our call
-            setOutgoingCall(null);
-            alert(`${getUserNameById(invitation.fromUserId)} rejected your call`);
-          } else if (invitation.status === 'ended') {
-            // Call ended
-            setIncomingCall(null);
-            setOutgoingCall(null);
+      // Check if call_invitations table exists first
+      supabase
+        .from('call_invitations')
+        .select('id')
+        .limit(1)
+        .then(({ error }) => {
+          if (error && error.message?.includes('relation "call_invitations" does not exist')) {
+            console.warn('⚠️ call_invitations table not found. Call invitations will not work until table is created.');
+            return;
           }
-        })
-        .subscribe();
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
+          const channel = supabase
+            .channel(`call_invitations_${authUser.id}`)
+            .on('postgres_changes', {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'call_invitations',
+              filter: `to_user_id=eq.${authUser.id}`,
+            }, (payload) => {
+              console.log('📞 Incoming call invitation:', payload.new);
+              const invitation = payload.new as CallInvitation;
+              setIncomingCall(invitation);
+            })
+            .on('postgres_changes', {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'call_invitations',
+              filter: `to_user_id=eq.${authUser.id}`,
+            }, (payload) => {
+              console.log('📞 Call invitation updated:', payload.new);
+              const invitation = payload.new as CallInvitation;
+              
+              if (invitation.status === 'accepted') {
+                // Remote user accepted our call
+                setOutgoingCall(null);
+                // Handle call acceptance logic here
+              } else if (invitation.status === 'rejected') {
+                // Remote user rejected our call
+                setOutgoingCall(null);
+                alert(`${getUserNameById(invitation.fromUserId)} rejected your call`);
+              } else if (invitation.status === 'ended') {
+                // Call ended
+                setIncomingCall(null);
+                setOutgoingCall(null);
+              }
+            })
+            .subscribe();
+
+          return () => {
+            supabase.removeChannel(channel);
+          };
+        });
     });
   }, [user?.id]);
 
@@ -150,6 +162,13 @@ export const useCallSignaling = () => {
 
       if (error) {
         console.error('Database error:', error);
+        
+        // If table doesn't exist, show helpful message
+        if (error.message?.includes('relation "call_invitations" does not exist')) {
+          alert('Call invitations table not set up yet. Please run the SQL setup script in Supabase.');
+          return null;
+        }
+        
         throw error;
       }
 

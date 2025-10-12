@@ -314,7 +314,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
   };
 
   const handleEndCall = () => {
-    endCall();
+    console.log('🔴 Ending call...');
+    try {
+      endCall();
+    } catch (error) {
+      console.error('Error ending call:', error);
+    }
   };
 
 
