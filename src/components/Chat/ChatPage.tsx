@@ -24,9 +24,9 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col lg:flex-row min-h-0">
+    <div className="h-full flex flex-col lg:flex-row min-h-0 overflow-hidden">
       {/* Chat List - Full width on mobile/tablet, sidebar on desktop */}
-      <div className={`${activeConversation ? 'hidden lg:block' : 'block'} w-full lg:w-1/3 xl:w-1/4 border-r border-gray-800/50 h-full min-h-0`}>
+      <div className={`${activeConversation ? 'hidden lg:block' : 'block'} w-full lg:w-1/3 xl:w-1/4 border-r border-gray-800/50 h-full min-h-0 overflow-hidden`}>
         <ChatList 
           onConversationSelect={handleConversationSelect} 
           chatHook={chatHook}
@@ -34,7 +34,7 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Chat Window - Full width on mobile/tablet when active, hidden on desktop when no conversation */}
-      <div className={`${activeConversation ? 'block' : 'hidden lg:block'} flex-1 h-full min-h-0`}>
+      <div className={`${activeConversation ? 'block' : 'hidden lg:block'} flex-1 h-full min-h-0 overflow-hidden`}>
         {activeConversation ? (
           <ChatWindow
             conversation={activeConversation}

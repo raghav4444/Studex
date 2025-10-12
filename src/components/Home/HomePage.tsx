@@ -19,18 +19,17 @@ import { usePosts } from '../../hooks/usePosts';
 // Lazy load components for better performance
 const PostComposer = React.lazy(() => import('./PostComposer'));
 const PostCard = React.lazy(() => import('./PostCard'));
-const ChatPage = React.lazy(() => import('../Chat/ChatPage'));
 const NotificationDropdown = React.lazy(() => import('./NotificationDropdown'));
 
 const HomePage: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'college' | 'global' | 'chat'>('college');
+  const [activeTab, setActiveTab] = useState<'college' | 'global'>('college');
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   
-  const { posts, loading, createPost, likePost, unlikePost } = usePosts(activeTab === 'chat' ? 'college' : activeTab);
+  const { posts, loading, createPost, likePost, unlikePost } = usePosts(activeTab);
   
 
   // Mock notification count
@@ -76,7 +75,7 @@ const HomePage: React.FC = () => {
               Welcome back, {user?.name?.split(' ')[0]}! 👋
             </h1>
             <p className="text-sm sm:text-base text-gray-400 line-clamp-2">
-              Here's what's happening in your {activeTab === 'college' ? 'college' : activeTab === 'global' ? 'global' : 'chat'} community
+              Here's what's happening in your {activeTab === 'college' ? 'college' : 'global'} community
             </p>
           </div>
           <div className="flex items-center justify-between sm:justify-end space-x-3 shrink-0">
@@ -185,17 +184,6 @@ const HomePage: React.FC = () => {
           <span className="font-medium text-sm sm:text-base">Global Feed</span>
         </button>
 
-              <button
-                onClick={() => setActiveTab('chat')}
-                className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-md transition-all duration-200 whitespace-nowrap touch-manipulation ${
-                  activeTab === 'chat'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                }`}
-              >
-                <MessageSquare className="w-4 h-4 shrink-0" />
-                <span className="font-medium text-sm sm:text-base">Chat</span>
-              </button>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:space-x-3 sm:gap-0">
@@ -216,12 +204,7 @@ const HomePage: React.FC = () => {
       </div>
 
           {/* Content based on active tab */}
-          {activeTab === 'chat' ? (
-            <React.Suspense fallback={<div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-96"></div>}>
-              <ChatPage />
-            </React.Suspense>
-          ) : (
-            <>
+          <>
       {/* Post Composer */}
               <div>
         <React.Suspense fallback={<div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-32"></div>}>
@@ -265,8 +248,7 @@ const HomePage: React.FC = () => {
         )}
       </div>
       )}
-            </>
-          )}
+          </>
         </div>
 
         {/* Sidebar - Hidden on mobile, shown on desktop */}
