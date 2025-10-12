@@ -10,14 +10,55 @@ const ResetPasswordForm: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isValidSession, setIsValidSession] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid session for password reset
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    // Handle the auth callback from the password reset email
+    const handleAuthCallback = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session error:', error);
+          setError('Invalid or expired reset link. Please request a new password reset.');
+          return;
+        }
+
+        if (data.session) {
+          console.log('Valid session found for password reset');
+          setIsValidSession(true);
+        } else {
+          // Try to get the session from URL hash/fragment
+          const urlParams = new URLSearchParams(window.location.search);
+          const accessToken = urlParams.get('access_token');
+          const refreshToken = urlParams.get('refresh_token');
+          const type = urlParams.get('type');
+
+          if (type === 'recovery' && accessToken && refreshToken) {
+            console.log('Found recovery tokens in URL, setting session...');
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+
+            if (sessionError) {
+              console.error('Error setting session:', sessionError);
+              setError('Invalid or expired reset link. Please request a new password reset.');
+            } else {
+              console.log('Session set successfully');
+              setIsValidSession(true);
+            }
+          } else {
+            setError('Invalid or expired reset link. Please request a new password reset.');
+          }
+        }
+      } catch (err) {
+        console.error('Error handling auth callback:', err);
         setError('Invalid or expired reset link. Please request a new password reset.');
       }
-    });
+    };
+
+    handleAuthCallback();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,6 +109,39 @@ const ResetPasswordForm: React.FC = () => {
             className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
           >
             Go to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while checking session
+  if (!isValidSession && !error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0d1117] to-[#161b22] p-4">
+        <div className="text-center">
+          <div className="w-8 h-8 bg-blue-500 rounded-lg animate-pulse mx-auto mb-4"></div>
+          <p className="text-gray-400">Verifying reset link...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no valid session
+  if (error && !isValidSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0d1117] to-[#161b22] p-4">
+        <div className="bg-[#161b22] rounded-lg p-8 border border-gray-800 w-full max-w-md text-center">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <X className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-4">Invalid Reset Link</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+          >
+            Go to Home
           </button>
         </div>
       </div>
@@ -150,7 +224,7 @@ const ResetPasswordForm: React.FC = () => {
           <p className="text-gray-400 text-sm">
             Remember your password?{' '}
             <a
-              href="/auth"
+              href="/"
               className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
             >
               Sign in here

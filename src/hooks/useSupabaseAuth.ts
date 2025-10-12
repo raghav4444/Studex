@@ -338,8 +338,16 @@ export const useSupabaseAuth = () => {
   const resetPassword = async (email: string) => {
     setLoading(true);
     try {
+      // Determine the correct redirect URL based on environment
+      const isDevelopment = window.location.hostname === 'localhost';
+      const redirectUrl = isDevelopment 
+        ? `${window.location.origin}/`
+        : `${window.location.origin}/Studex/`;
+      
+      console.log('🔗 Reset password redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: redirectUrl,
       });
       
       if (error) throw error;
