@@ -89,6 +89,32 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
     }
   }, [callState.isInCall]);
 
+  // Add escape key handler to force close call modal
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && (callState.isInCall || incomingCall)) {
+        console.log('🔴 ESC key pressed - force ending call');
+        setForceCloseCall(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [callState.isInCall, incomingCall]);
+
+  // Add double-click handler to force close call modal (emergency exit)
+  useEffect(() => {
+    const handleDoubleClick = (event: MouseEvent) => {
+      if ((callState.isInCall || incomingCall) && event.detail === 2) {
+        console.log('🔴 Double click detected - force ending call');
+        setForceCloseCall(true);
+      }
+    };
+
+    document.addEventListener('dblclick', handleDoubleClick);
+    return () => document.removeEventListener('dblclick', handleDoubleClick);
+  }, [callState.isInCall, incomingCall]);
+
   const handleSendMessage = async () => {
     if ((newMessage.trim() || selectedFiles.length > 0) && conversation.id) {
       setUploadingFiles(true);
@@ -323,23 +349,30 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, chatHook 
 
   const handleEndCall = () => {
     console.log('🔴 Ending call...');
+    
+    // Force close immediately - this is the most important part
+    setForceCloseCall(true);
+    
     try {
-      // Force end the call regardless of any errors
+      // Try to end the call properly
       endCall();
-      
-      // Force close immediately
-      setForceCloseCall(true);
-      
-      // Also try to clear incoming/outgoing calls
+    } catch (error) {
+      console.error('Error ending call:', error);
+    }
+    
+    try {
+      // Try to reject if there's an incoming call
       if (incomingCall) {
         rejectCall();
       }
-      
     } catch (error) {
-      console.error('Error ending call:', error);
-      // Force close the modal
-      setForceCloseCall(true);
+      console.error('Error rejecting call:', error);
     }
+    
+    // Force clear all call states after a short delay
+    setTimeout(() => {
+      setForceCloseCall(true);
+    }, 100);
   };
 
 

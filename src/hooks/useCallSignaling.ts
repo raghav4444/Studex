@@ -46,6 +46,7 @@ export const useCallSignaling = () => {
             return;
           }
 
+          console.log('📞 Creating call invitation channel for user:', authUser.id);
           const channel = supabase
             .channel(`call_invitations_${authUser.id}`)
             .on('postgres_changes', {
@@ -55,6 +56,11 @@ export const useCallSignaling = () => {
               filter: `to_user_id=eq.${authUser.id}`,
             }, (payload) => {
               console.log('📞 Incoming call invitation:', payload.new);
+              console.log('📞 Payload details:', {
+                event: payload.eventType,
+                new: payload.new,
+                old: payload.old
+              });
               const invitation = payload.new as CallInvitation;
               setIncomingCall(invitation);
             })
@@ -81,9 +87,12 @@ export const useCallSignaling = () => {
                 setOutgoingCall(null);
               }
             })
-            .subscribe();
+            .subscribe((status) => {
+              console.log('📞 Channel subscription status:', status);
+            });
 
           return () => {
+            console.log('📞 Removing call invitation channel');
             supabase.removeChannel(channel);
           };
         });

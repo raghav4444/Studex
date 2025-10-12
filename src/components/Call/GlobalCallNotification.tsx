@@ -8,16 +8,33 @@ const GlobalCallNotification: React.FC = () => {
   const { incomingCall, acceptCallInvitation, rejectCallInvitation } = useCallSignaling();
   const [isVisible, setIsVisible] = useState(false);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔔 GlobalCallNotification - incomingCall changed:', incomingCall);
+    console.log('🔔 GlobalCallNotification - user:', user?.id);
+    
+    // Test if component is working by showing a test notification after 5 seconds
+    if (user?.id) {
+      const testTimer = setTimeout(() => {
+        console.log('🔔 TEST: GlobalCallNotification component is working!');
+      }, 5000);
+      return () => clearTimeout(testTimer);
+    }
+  }, [incomingCall, user?.id]);
+
   useEffect(() => {
     if (incomingCall) {
+      console.log('🔔 Showing incoming call notification for:', incomingCall);
       setIsVisible(true);
       // Auto-hide after 30 seconds if not answered
       const timer = setTimeout(() => {
+        console.log('🔔 Auto-hiding call notification after timeout');
         setIsVisible(false);
       }, 30000);
       
       return () => clearTimeout(timer);
     } else {
+      console.log('🔔 Hiding call notification - no incoming call');
       setIsVisible(false);
     }
   }, [incomingCall]);
@@ -36,7 +53,10 @@ const GlobalCallNotification: React.FC = () => {
     }
   };
 
-  if (!isVisible || !incomingCall) return null;
+  if (!isVisible || !incomingCall) {
+    console.log('🔔 GlobalCallNotification not rendering:', { isVisible, incomingCall });
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
