@@ -23,9 +23,11 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
+        working-directory: Studex
         run: npm install
 
       - name: Build project
+        working-directory: Studex
         run: npm run build
 
       - name: Setup Pages
@@ -34,7 +36,7 @@ jobs:
       - name: Upload build files
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: Studex/dist
 
       - name: Deploy
         uses: actions/deploy-pages@v4
