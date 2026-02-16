@@ -56,19 +56,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
           <p className="text-gray-400">Sign in to your CampusLink account</p>
         </div>
 
-        {/* Shared testing / demo account info */}
+        {/* Demo accounts: 5 users with different verification / access levels */}
         <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-100">
-          <p className="font-semibold mb-1">Testing account (read‑only / demo)</p>
-          <p className="text-amber-100">
-            <span className="text-gray-300">Email:</span>{' '}
-            <code className="bg-black/40 px-1 py-0.5 rounded">studex.demo@axiscolleges.in</code>
-          </p>
-          <p className="text-amber-100 mt-1">
-            <span className="text-gray-300">Password:</span>{' '}
-            <code className="bg-black/40 px-1 py-0.5 rounded">StudexDemo123!</code>
-          </p>
+          <p className="font-semibold mb-2">Demo accounts (password: <code className="bg-black/40 px-1 py-0.5 rounded">StudexDemo123!</code>)</p>
+          <ul className="space-y-1.5 text-xs">
+            <li><span className="text-gray-400">Full access:</span> <code className="bg-black/40 px-1 rounded">demo.full1@axiscolleges.in</code> or <code className="bg-black/40 px-1 rounded">demo.full2@axiscolleges.in</code></li>
+            <li><span className="text-gray-400">Partial access:</span> <code className="bg-black/40 px-1 rounded">demo.partial@axiscolleges.in</code> or <code className="bg-black/40 px-1 rounded">demo.pending@axiscolleges.in</code></li>
+            <li><span className="text-gray-400">Read-only:</span> <code className="bg-black/40 px-1 rounded">demo.readonly@axiscolleges.in</code></li>
+          </ul>
           <p className="mt-2 text-xs text-gray-400">
-            Anyone can use these credentials to explore the app without creating a new account.
+            Use any email above to test verified (full), partial, or read-only community access.
           </p>
         </div>
 

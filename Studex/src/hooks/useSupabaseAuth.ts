@@ -2,10 +2,28 @@ import { useState, useEffect } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { User } from "../types";
+import type { CommunityAccessLevel } from "../types";
 
-// Fixed demo/testing credentials so anyone can log in
-const DEMO_EMAIL = "studex.demo@axiscolleges.in";
 const DEMO_PASSWORD = "StudexDemo123!";
+
+/** 5 demo users with different verification/access levels for community access validation */
+const DEMO_ACCOUNTS: Array<{
+  email: string;
+  password: string;
+  name: string;
+  username: string;
+  accessLevel: CommunityAccessLevel;
+  isVerified: boolean;
+}> = [
+  { email: "demo.full1@axiscolleges.in", password: DEMO_PASSWORD, name: "Demo Full Access", username: "demofull1", accessLevel: "full", isVerified: true },
+  { email: "demo.full2@axiscolleges.in", password: DEMO_PASSWORD, name: "Demo Verified User", username: "demofull2", accessLevel: "full", isVerified: true },
+  { email: "demo.partial@axiscolleges.in", password: DEMO_PASSWORD, name: "Demo Partial Access", username: "demopartial", accessLevel: "partial", isVerified: true },
+  { email: "demo.pending@axiscolleges.in", password: DEMO_PASSWORD, name: "Demo Pending Verification", username: "demopending", accessLevel: "partial", isVerified: false },
+  { email: "demo.readonly@axiscolleges.in", password: DEMO_PASSWORD, name: "Demo Read Only", username: "demoreadonly", accessLevel: "read_only", isVerified: false },
+];
+
+// Legacy single demo account (same as first full user)
+const DEMO_EMAIL = DEMO_ACCOUNTS[0].email;
 
 // Utility function to format names consistently
 const formatDisplayName = (name: string | undefined, email: string | undefined): string => {
@@ -83,7 +101,8 @@ export const useSupabaseAuth = () => {
       if (session?.user) {
         await fetchUserProfile(session.user);
       } else {
-        setUser(null);
+        // Don't clear user if currently a demo user (no Supabase session)
+        setUser((prev) => (prev?.id?.startsWith("demo-") ? prev : null));
         setLoading(false);
       }
     });
@@ -130,6 +149,7 @@ export const useSupabaseAuth = () => {
               achievements?: string[];
               is_verified: boolean;
               is_anonymous: boolean;
+              access_level?: 'full' | 'partial' | 'read_only';
               created_at: string;
               updated_at: string;
             }[]
@@ -181,6 +201,7 @@ export const useSupabaseAuth = () => {
           achievements: profile.achievements || [],
           isVerified: profile.is_verified,
           isAnonymous: profile.is_anonymous,
+          accessLevel: (profile.access_level as User['accessLevel']) ?? (profile.is_verified ? 'full' : 'read_only'),
           joinedAt: new Date(profile.created_at),
           lastActive: new Date(profile.updated_at),
         };
@@ -219,6 +240,7 @@ export const useSupabaseAuth = () => {
       achievements: [],
       isVerified: true,
       isAnonymous: false,
+      accessLevel: "full",
       joinedAt: new Date(),
       lastActive: new Date(),
     };
@@ -271,7 +293,8 @@ export const useSupabaseAuth = () => {
         const baseUsername = userData.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
         const username = baseUsername.length >= 3 ? baseUsername : baseUsername + '123';
         
-        // Create profile
+        // Create profile (verified => full access, else read_only until admin upgrades)
+        const accessLevel = isValidCollegeEmail ? 'full' : 'read_only';
         const { error: profileError } = await supabase.from("profiles").insert({
           user_id: data.user.id,
           name: userData.name,
@@ -282,6 +305,7 @@ export const useSupabaseAuth = () => {
           year: userData.year,
           bio: userData.bio || "",
           is_verified: isValidCollegeEmail,
+          access_level: accessLevel,
         });
 
         if (profileError) throw profileError;
@@ -299,30 +323,36 @@ export const useSupabaseAuth = () => {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Handle shared demo/testing account entirely on the frontend
-      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      // Normalize input so " Demo.Full1@axiscolleges.in " still matches
+      const emailNorm = email?.trim().toLowerCase() ?? "";
+      const passwordTrim = password?.trim() ?? "";
+      // Handle demo accounts (5 users with different access levels) entirely on the frontend
+      const demo = DEMO_ACCOUNTS.find(
+        (d) => d.email.toLowerCase() === emailNorm && d.password === passwordTrim
+      );
+      if (demo) {
         const now = new Date();
         const demoUser: User = {
-          id: "demo-user",
-          name: "Studex Demo User",
-          username: "studexdemo",
-          email: DEMO_EMAIL,
+          id: `demo-${demo.username}`,
+          name: demo.name,
+          username: demo.username,
+          email: demo.email,
           college: "Axis Colleges",
           branch: "Computer Science",
           year: 2023,
-          bio: "Demo account for exploring Studex without signing up.",
+          bio: `Demo account: ${demo.accessLevel} access. ${demo.isVerified ? "Verified." : "Not verified."}`,
           avatar: undefined,
-          skills: ["Demo", "Testing"],
+          skills: ["Demo"],
           achievements: [],
-          isVerified: true,
+          isVerified: demo.isVerified,
           isAnonymous: false,
+          accessLevel: demo.accessLevel,
           joinedAt: now,
           lastActive: now,
         };
-
         setUser(demoUser);
         setLoading(false);
-        console.log("✅ Logged in with demo testing account");
+        console.log("✅ Logged in with demo account:", demo.accessLevel);
         return;
       }
 

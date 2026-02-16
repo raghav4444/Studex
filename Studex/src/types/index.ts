@@ -1,3 +1,6 @@
+/** Community access based on verification. Full = verified, partial = limited write, read_only = view only. */
+export type CommunityAccessLevel = 'full' | 'partial' | 'read_only';
+
 export interface User {
   id: string;
   name: string;
@@ -9,6 +12,8 @@ export interface User {
   bio?: string;
   isVerified: boolean;
   isAnonymous: boolean;
+  /** Determines create/edit/delete permissions in community features. Defaults from isVerified if omitted. */
+  accessLevel?: CommunityAccessLevel;
   avatar?: string;
   skills?: string[];
   achievements?: string[];

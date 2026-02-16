@@ -20,9 +20,11 @@ interface PostCardProps {
   post: Post;
   onLike?: (postId: string) => void;
   onUnlike?: (postId: string) => void;
+  /** When false, like button is disabled (e.g. read-only access). Default true. */
+  canLike?: boolean;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, onLike, onUnlike }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, onLike, onUnlike, canLike = true }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
@@ -174,9 +176,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onUnlike }) => {
           <div className="flex items-center space-x-4 sm:space-x-6">
             <button 
               onClick={handleLike}
+              disabled={!canLike}
+              title={!canLike ? 'Verify your account to like posts' : undefined}
               className={`flex items-center space-x-1 sm:space-x-2 transition-colors touch-manipulation ${
-                isLiked ? 'text-red-400' : 'text-gray-400 hover:text-red-400'
-              }`}
+                !canLike ? 'cursor-not-allowed opacity-60' : ''
+              } ${isLiked ? 'text-red-400' : 'text-gray-400 hover:text-red-400'}`}
             >
               <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isLiked ? 'fill-current' : ''}`} />
               <span className="text-xs sm:text-sm font-medium">{post.likes || 0}</span>

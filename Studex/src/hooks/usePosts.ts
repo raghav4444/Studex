@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/AuthProvider';
+import { useCommunityAccess } from './useCommunityAccess';
 import { Post, User } from '../types';
 
 export const usePosts = (scope: 'college' | 'global' = 'college') => {
   const { user } = useAuth();
+  const { canCreate, canLike } = useCommunityAccess();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,6 +85,9 @@ export const usePosts = (scope: 'college' | 'global' = 'college') => {
 
   const createPost = async (content: string, file?: File, isAnonymous = false, tags?: string[]) => {
     if (!user) return;
+    if (!canCreate) {
+      throw new Error('You do not have permission to create posts. Verify your account for full or partial access.');
+    }
 
     try {
       let fileUrl = null;
@@ -132,6 +137,7 @@ export const usePosts = (scope: 'college' | 'global' = 'college') => {
 
   const likePost = async (postId: string) => {
     if (!user) return;
+    if (!canLike) return;
 
     try {
       const { error } = await supabase
@@ -150,6 +156,7 @@ export const usePosts = (scope: 'college' | 'global' = 'college') => {
 
   const unlikePost = async (postId: string) => {
     if (!user) return;
+    if (!canLike) return;
 
     try {
       const { error } = await supabase

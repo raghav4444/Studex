@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../AuthProvider';
 import { usePosts } from '../../hooks/usePosts';
+import { useCommunityAccess } from '../../hooks/useCommunityAccess';
 
 // Lazy load components for better performance
 const PostComposer = React.lazy(() => import('./PostComposer'));
@@ -24,6 +25,7 @@ const NotificationDropdown = React.lazy(() => import('./NotificationDropdown'));
 
 const HomePage: React.FC = () => {
   const { user } = useAuth();
+  const { canCreate, canLike, accessLevel, isReadOnly, isPartial } = useCommunityAccess();
   const [activeTab, setActiveTab] = useState<'college' | 'global' | 'chat'>('college');
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -222,12 +224,24 @@ const HomePage: React.FC = () => {
             </React.Suspense>
           ) : (
             <>
-      {/* Post Composer */}
+      {/* Access level banner for non-full users */}
+              {(isReadOnly || isPartial) && (
+                <div className={`mb-4 rounded-lg border p-3 text-sm ${isReadOnly ? 'border-amber-500/30 bg-amber-500/10 text-amber-100' : 'border-blue-500/30 bg-blue-500/10 text-blue-100'}`}>
+                  {isReadOnly ? (
+                    <>You have <strong>read-only</strong> access. Verify your college email for full or partial access to post, like, and comment.</>
+                  ) : (
+                    <>You have <strong>partial</strong> access. You can post and like; some actions are limited until fully verified.</>
+                  )}
+                </div>
+              )}
+      {/* Post Composer - only for users who can create */}
+              {canCreate && (
               <div>
         <React.Suspense fallback={<div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-32"></div>}>
                   <PostComposer onPostCreate={handleCreatePost} />
         </React.Suspense>
       </div>
+              )}
 
       {/* Posts Feed */}
       {loading ? (
@@ -243,8 +257,9 @@ const HomePage: React.FC = () => {
                         <PostCard 
                           key={post.id} 
                           post={post} 
-                          onLike={likePost}
-                          onUnlike={unlikePost}
+                          onLike={canLike ? likePost : undefined}
+                          onUnlike={canLike ? unlikePost : undefined}
+                          canLike={canLike}
                         />
             ))}
           </React.Suspense>
