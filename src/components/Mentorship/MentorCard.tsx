@@ -23,30 +23,24 @@ const MentorCard: React.FC<MentorCardProps> = ({ mentor, onRequestMentorship }) 
             )}
             <span
               className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
-                mentor.isAvailable
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-amber-500/20 text-amber-400'
+                !mentor.isAvailable
+                  ? 'bg-amber-500/20 text-amber-400'
+                  : mentor.isActive
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-gray-600/30 text-gray-400'
               }`}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  mentor.isAvailable ? 'bg-green-400' : 'bg-amber-400'
+                  !mentor.isAvailable ? 'bg-amber-400' : mentor.isActive ? 'bg-green-400' : 'bg-gray-500'
                 }`}
               />
-              {mentor.isAvailable ? 'Available Now' : 'Busy'}
+              {!mentor.isAvailable
+                ? 'Busy'
+                : mentor.isActive
+                  ? 'Available Now'
+                  : 'Away'}
             </span>
-            {mentor.isActive !== undefined && (
-              <span
-                className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
-                  mentor.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-600/30 text-gray-400'
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${mentor.isActive ? 'bg-emerald-400' : 'bg-gray-500'}`}
-                />
-                {mentor.isActive ? 'Active now' : 'Away'}
-              </span>
-            )}
           </div>
           
           <div className="space-y-1 mb-3">
