@@ -5,6 +5,7 @@ import { User } from '../types';
 interface AuthContextType {
   user: User | null;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithSSO: (provider?: "google" | "azure") => Promise<void>;
   signUp: (userData: { name: string; email: string; password: string; college: string; branch: string; year: number; bio?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;

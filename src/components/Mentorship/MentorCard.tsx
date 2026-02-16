@@ -16,14 +16,35 @@ const MentorCard: React.FC<MentorCardProps> = ({ mentor, onRequestMentorship }) 
         </div>
         
         <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-2">
+          <div className="flex items-center space-x-2 mb-2 flex-wrap gap-2">
             <h3 className="text-lg font-semibold text-white">{mentor.name}</h3>
             {mentor.isVerified && (
-              <Shield className="w-4 h-4 text-blue-400" />
+              <Shield className="w-4 h-4 text-blue-400 shrink-0" />
             )}
-            {!mentor.isAvailable && (
-              <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">
-                Unavailable
+            <span
+              className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
+                mentor.isAvailable
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-amber-500/20 text-amber-400'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  mentor.isAvailable ? 'bg-green-400' : 'bg-amber-400'
+                }`}
+              />
+              {mentor.isAvailable ? 'Available Now' : 'Busy'}
+            </span>
+            {mentor.isActive !== undefined && (
+              <span
+                className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
+                  mentor.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-600/30 text-gray-400'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${mentor.isActive ? 'bg-emerald-400' : 'bg-gray-500'}`}
+                />
+                {mentor.isActive ? 'Active now' : 'Away'}
               </span>
             )}
           </div>

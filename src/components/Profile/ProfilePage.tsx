@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../AuthProvider';
 import UsernameUpdate from './UsernameUpdate';
+import IDVerification from './IDVerification';
 
 interface ProfileData {
   id: string;
@@ -152,7 +153,9 @@ const ProfilePage: React.FC = () => {
           {profileData.isVerified && !profileData.isAnonymous && (
             <div className="flex items-center space-x-1 bg-blue-500/20 px-2 py-1 rounded-full">
               <Shield className="w-4 h-4 text-blue-400" />
-              <span className="text-xs text-blue-300 font-medium">Verified</span>
+              <span className="text-xs text-blue-300 font-medium">
+                {user?.verificationMethod === 'sso' ? 'SSO Verified' : 'Email Verified'}
+              </span>
             </div>
           )}
         </div>
@@ -485,6 +488,9 @@ const ProfilePage: React.FC = () => {
               Complete your profile to improve visibility and connect with more students!
             </p>
           </div>
+
+          {/* ID Card Verification */}
+          <IDVerification />
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-4">

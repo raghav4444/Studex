@@ -1,64 +1,24 @@
 import React, { useState } from 'react';
 import { Users, Search, Filter } from 'lucide-react';
 import MentorCard from './MentorCard';
-import { Mentor } from '../../types';
+import { useMentors } from '../../hooks/useMentors';
 
 const MentorshipPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
 
-  const [mentors] = useState<Mentor[]>([
-    {
-      id: '1',
-      userId: '1',
-      name: 'Sarah Chen',
-      college: 'MIT',
-      branch: 'Computer Science',
-      year: 4,
-      skills: ['React', 'Node.js', 'Machine Learning', 'Data Structures'],
-      bio: 'Senior CS student with internship experience at Google. Love helping juniors with coding and career guidance.',
-      isAvailable: true,
-      rating: 4.9,
-      isVerified: true,
-    },
-    {
-      id: '2',
-      userId: '2',
-      name: 'Alex Rodriguez',
-      college: 'Caltech',
-      branch: 'Physics',
-      year: 4,
-      skills: ['Quantum Mechanics', 'Research', 'LaTeX', 'MATLAB'],
-      bio: 'Physics PhD candidate specializing in quantum computing. Happy to help with physics concepts and research methodology.',
-      isAvailable: true,
-      rating: 4.7,
-      isVerified: true,
-    },
-    {
-      id: '3',
-      userId: '3',
-      name: 'Emily Wang',
-      college: 'Stanford',
-      branch: 'Mechanical Engineering',
-      year: 3,
-      skills: ['CAD Design', 'Thermodynamics', 'Project Management', 'Internships'],
-      bio: 'Mechanical engineering student with hands-on project experience. Can help with design thinking and industry preparation.',
-      isAvailable: false,
-      rating: 4.8,
-      isVerified: true,
-    },
-  ]);
+  const { mentors, loading, error } = useMentors();
 
   const branches = ['all', 'Computer Science', 'Mechanical Engineering', 'Physics', 'Mathematics'];
   const years = ['all', '2nd Year', '3rd Year', '4th Year', 'Graduate'];
 
-  const filteredMentors = mentors.filter(mentor => {
-    const matchesSearch = mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         mentor.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredMentors = mentors.filter((mentor) => {
+    const matchesSearch =
+      mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      mentor.skills.some((skill) => skill.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesBranch = selectedBranch === 'all' || mentor.branch === selectedBranch;
     const matchesYear = selectedYear === 'all' || `${mentor.year}th Year` === selectedYear;
-    
     return matchesSearch && matchesBranch && matchesYear;
   });
 
@@ -120,18 +80,34 @@ const MentorshipPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Mentors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMentors.map((mentor) => (
-          <MentorCard
-            key={mentor.id}
-            mentor={mentor}
-            onRequestMentorship={handleRequestMentorship}
-          />
-        ))}
-      </div>
+      {error && (
+        <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
 
-      {filteredMentors.length === 0 && (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-[#161b22] rounded-lg p-6 border border-gray-800 animate-pulse h-64"
+            />
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMentors.map((mentor) => (
+              <MentorCard
+                key={mentor.id}
+                mentor={mentor}
+                onRequestMentorship={handleRequestMentorship}
+              />
+            ))}
+          </div>
+
+          {filteredMentors.length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-gray-500" />
@@ -139,6 +115,8 @@ const MentorshipPage: React.FC = () => {
           <h3 className="text-lg font-medium text-white mb-2">No mentors found</h3>
           <p className="text-gray-400">Try adjusting your search or filters</p>
         </div>
+      )}
+        </>
       )}
     </div>
   );

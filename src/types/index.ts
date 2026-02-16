@@ -1,3 +1,6 @@
+/** How the user was verified: email (password + OTP) or SSO. */
+export type VerificationMethod = "email" | "sso";
+
 export interface User {
   id: string;
   name: string;
@@ -8,6 +11,8 @@ export interface User {
   year: number;
   bio?: string;
   isVerified: boolean;
+  /** Present when isVerified: 'email' = Email Verified, 'sso' = SSO Verified */
+  verificationMethod?: VerificationMethod;
   isAnonymous: boolean;
   avatar?: string;
   skills?: string[];
@@ -75,6 +80,9 @@ export interface Mentor {
   achievements: string[];
   hourlyRate?: number;
   responseTime: string;
+  /** When true, mentor was active (last_seen) within the last few minutes */
+  isActive?: boolean;
+  lastSeenAt?: string;
 }
 
 export interface MentorshipRequest {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { AuthProvider } from "./components/AuthProvider";
-import { useAuth } from "./components/AuthProvider"; // Ensure this hook is correctly implemented and returns { user, loading }
+import { useAuth } from "./components/AuthProvider";
+import { hasCompletedIdUpload } from "./components/Auth/IdUploadOnboarding";
 
 // Lazy load components for better performance
 const LandingPage = React.lazy(
@@ -33,12 +34,23 @@ const ChatPage = React.lazy(() => import("./components/Chat/ChatPage"));
 const ResetPasswordForm = React.lazy(() => import("./components/Auth/ResetPasswordForm"));
 const PasswordResetDebug = React.lazy(() => import("./components/Auth/PasswordResetDebug"));
 const GlobalCallNotification = React.lazy(() => import("./components/Call/GlobalCallNotification"));
+const IdUploadOnboarding = React.lazy(() => import("./components/Auth/IdUploadOnboarding"));
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("home");
   const [showAuth, setShowAuth] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [idUploadDone, setIdUploadDone] = useState<boolean | null>(null);
+
+  // First-time ID upload: check per user when they log in
+  useEffect(() => {
+    if (!user) {
+      setIdUploadDone(null);
+      return;
+    }
+    setIdUploadDone(hasCompletedIdUpload(user.id));
+  }, [user?.id]);
 
   // Check if we're on a password reset URL
   useEffect(() => {
@@ -136,6 +148,21 @@ const AppContent: React.FC = () => {
         ) : (
           <LandingPage onGetStarted={() => setShowAuth(true)} />
         )}
+      </React.Suspense>
+    );
+  }
+
+  // First-time login: ask for ID card upload (static upload only, no verification)
+  if (idUploadDone === false) {
+    return (
+      <React.Suspense
+        fallback={
+          <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+            <div className="w-8 h-8 bg-blue-500 rounded-lg animate-pulse" />
+          </div>
+        }
+      >
+        <IdUploadOnboarding userId={user.id} onComplete={() => setIdUploadDone(true)} />
       </React.Suspense>
     );
   }

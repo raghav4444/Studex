@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { User } from "../types";
+import {
+  isValidCollegeEmail,
+  INSTITUTIONAL_EMAIL_REQUIRED_MESSAGE,
+} from "../lib/emailService";
 
 // Utility function to format names consistently
 const formatDisplayName = (name: string | undefined, email: string | undefined): string => {
@@ -45,6 +49,16 @@ export const useSupabaseAuth = () => {
       setLoading(false);
     }, 20000); // 10 second timeout
 
+    const bumpLastSeen = (userId: string) => {
+      supabase
+        .from("profiles")
+        .update({ last_seen: new Date().toISOString() })
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) console.warn("Failed to bump last_seen:", error.message);
+        });
+    };
+
     // Get initial session
     supabase.auth
       .getSession()
@@ -59,6 +73,7 @@ export const useSupabaseAuth = () => {
         if (session?.user) {
           console.log("👤 User found, fetching profile...");
           fetchUserProfile(session.user);
+          bumpLastSeen(session.user.id);
         } else {
           console.log("❌ No user session, setting loading to false");
           setLoading(false);
@@ -78,6 +93,11 @@ export const useSupabaseAuth = () => {
       setSession(session);
       if (session?.user) {
         await fetchUserProfile(session.user);
+        supabase
+          .from("profiles")
+          .update({ last_seen: new Date().toISOString() })
+          .eq("user_id", session.user.id)
+          .then(() => {});
       } else {
         setUser(null);
         setLoading(false);
@@ -162,6 +182,12 @@ export const useSupabaseAuth = () => {
           college: profile.college,
         });
 
+        const verificationMethod =
+          authUser.app_metadata?.provider &&
+          authUser.app_metadata.provider !== "email"
+            ? ("sso" as const)
+            : ("email" as const);
+
         const user: User = {
           id: profile.id,
           name: formatDisplayName(profile.name, profile.email),
@@ -175,6 +201,7 @@ export const useSupabaseAuth = () => {
           skills: profile.skills || [],
           achievements: profile.achievements || [],
           isVerified: profile.is_verified,
+          verificationMethod,
           isAnonymous: profile.is_anonymous,
           joinedAt: new Date(profile.created_at),
           lastActive: new Date(profile.updated_at),
@@ -200,6 +227,12 @@ export const useSupabaseAuth = () => {
     // FALLBACK: Create a basic user profile from auth data
     console.log("🔄 Creating fallback user profile from auth data");
     
+    const verificationMethod =
+      authUser.app_metadata?.provider &&
+      authUser.app_metadata.provider !== "email"
+        ? ("sso" as const)
+        : ("email" as const);
+
     const fallbackUser: User = {
       id: "fallback-" + authUser.id,
       name: formatDisplayName(undefined, authUser.email),
@@ -213,6 +246,7 @@ export const useSupabaseAuth = () => {
       skills: [],
       achievements: [],
       isVerified: true,
+      verificationMethod,
       isAnonymous: false,
       joinedAt: new Date(),
       lastActive: new Date(),
@@ -294,8 +328,11 @@ export const useSupabaseAuth = () => {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
+      if (!isValidCollegeEmail(email.trim())) {
+        throw new Error(INSTITUTIONAL_EMAIL_REQUIRED_MESSAGE);
+      }
       await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
     } catch (error: unknown) {
@@ -303,6 +340,30 @@ export const useSupabaseAuth = () => {
         throw new Error(error.message || "Failed to sign in");
       }
       throw new Error("Failed to sign in");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** Institutional SSO login (e.g. Google Workspace for Education). */
+  const signInWithSSO = async (provider: "google" | "azure" = "google") => {
+    setLoading(true);
+    try {
+      const isDevelopment = window.location.hostname === "localhost";
+      const redirectUrl = isDevelopment
+        ? `${window.location.origin}/`
+        : `${window.location.origin}/Studex/`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: redirectUrl },
+      });
+      if (error) throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message || "SSO sign in failed");
+      }
+      throw new Error("SSO sign in failed");
     } finally {
       setLoading(false);
     }
@@ -418,10 +479,11 @@ export const useSupabaseAuth = () => {
     session,
     loading,
     signUp,
-    signIn, // Ensure this is exported for external usage
-    signOut, // Ensure this is exported for external usage
+    signIn,
+    signInWithSSO,
+    signOut,
     updateProfile,
-    resetPassword, // Add password reset function
-    createMissingProfile, // Add this new function
+    resetPassword,
+    createMissingProfile,
   };
 };

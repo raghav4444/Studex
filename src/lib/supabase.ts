@@ -34,6 +34,7 @@ export interface Database {
           is_anonymous: boolean;
           created_at: string;
           updated_at: string;
+          last_seen?: string | null;
         };
         Insert: {
           id?: string;
@@ -51,6 +52,7 @@ export interface Database {
           is_anonymous?: boolean;
           created_at?: string;
           updated_at?: string;
+          last_seen?: string | null;
         };
         Update: {
           id?: string;
@@ -66,6 +68,48 @@ export interface Database {
           achievements?: string[] | null;
           is_verified?: boolean;
           is_anonymous?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          last_seen?: string | null;
+        };
+      };
+      mentors: {
+        Row: {
+          id: string;
+          user_id: string;
+          rating: number | null;
+          bio: string | null;
+          skills: string[];
+          is_available: boolean;
+          experience: string[];
+          achievements: string[];
+          response_time: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          rating?: number | null;
+          bio?: string | null;
+          skills?: string[];
+          is_available?: boolean;
+          experience?: string[];
+          achievements?: string[];
+          response_time?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          rating?: number | null;
+          bio?: string | null;
+          skills?: string[];
+          is_available?: boolean;
+          experience?: string[];
+          achievements?: string[];
+          response_time?: string | null;
           created_at?: string;
           updated_at?: string;
         };

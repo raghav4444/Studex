@@ -1,4 +1,4 @@
-﻿import emailjs from "emailjs-com";
+import emailjs from "emailjs-com";
 
 declare global {
   interface Window {
@@ -106,6 +106,10 @@ export const testMinimalEmail = async () => {
 export const generateOTP = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
+
+/** Error message when a non-institutional email is used (e.g. on login). */
+export const INSTITUTIONAL_EMAIL_REQUIRED_MESSAGE =
+  "Only institutional email allowed";
 
 export const isValidCollegeEmail = (email: string): boolean => {
   const collegeEmailPatterns = [
