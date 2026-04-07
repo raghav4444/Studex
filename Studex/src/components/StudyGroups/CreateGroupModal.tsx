@@ -224,7 +224,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose }) 
                     <Lock className="w-4 h-4 text-orange-400" />
                     <div>
                       <p className="text-white font-medium">Private</p>
-                      <p className="text-xs text-gray-400">Only invited members can join</p>
+                      <p className="text-xs text-gray-400">Members request to join and creator approval is required</p>
                     </div>
                   </div>
                 </label>

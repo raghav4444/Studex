@@ -55,13 +55,14 @@ const StudyGroupsPage: React.FC = () => {
     studyGroups,
     loading,
     error,
-    createStudyGroup,
     joinStudyGroup,
     leaveStudyGroup,
-    updateStudyGroup,
+    respondToJoinRequest,
     deleteStudyGroup,
     isUserMember,
     isUserAdmin,
+    getJoinState,
+    incomingJoinRequests,
     refetch
   } = useStudyGroups();
 
@@ -115,6 +116,14 @@ const StudyGroupsPage: React.FC = () => {
       } catch (error) {
         console.error('Error deleting group:', error);
       }
+    }
+  };
+
+  const handleJoinRequestDecision = async (requestId: string, decision: 'accepted' | 'rejected') => {
+    try {
+      await respondToJoinRequest(requestId, decision);
+    } catch (joinRequestError) {
+      console.error('Error updating join request:', joinRequestError);
     }
   };
 
@@ -244,6 +253,41 @@ const StudyGroupsPage: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
+      {incomingJoinRequests.length > 0 && (
+        <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 mb-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Pending Join Requests</h2>
+          <div className="space-y-3">
+            {incomingJoinRequests.map((request) => (
+              <div
+                key={request.id}
+                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-[#0d1117] border border-gray-700 rounded-lg"
+              >
+                <div>
+                  <p className="text-white font-medium">{request.requester.name} wants to join {request.groupName}</p>
+                  <p className="text-xs text-gray-400">Requested {formatTimeAgo(request.createdAt)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleJoinRequestDecision(request.id, 'accepted')}
+                    className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors flex items-center space-x-1"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Approve</span>
+                  </button>
+                  <button
+                    onClick={() => handleJoinRequestDecision(request.id, 'rejected')}
+                    className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors flex items-center space-x-1"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Reject</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
@@ -376,13 +420,37 @@ const StudyGroupsPage: React.FC = () => {
                     <span>Leave</span>
                   </button>
                 ) : (
-                  <button
-                    onClick={() => handleJoinGroup(group.id)}
-                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-all duration-200"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    <span>{group.isPrivate ? 'Request Join' : 'Join Group'}</span>
-                  </button>
+                  (() => {
+                    const joinState = getJoinState(group.id);
+                    const isDisabled = joinState === 'pending' || joinState === 'full';
+                    const isRequest = joinState === 'request' || joinState === 'pending';
+                    const buttonText = joinState === 'request'
+                      ? 'Request Join'
+                      : joinState === 'pending'
+                        ? 'Request Pending'
+                        : joinState === 'accepted'
+                          ? 'Join Now'
+                          : joinState === 'full'
+                            ? 'Group Full'
+                            : 'Join Group';
+
+                    return (
+                      <button
+                        onClick={() => handleJoinGroup(group.id)}
+                        disabled={isDisabled}
+                        className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-white text-sm rounded-lg transition-all duration-200 ${
+                          isDisabled
+                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                            : isRequest
+                              ? 'bg-orange-500 hover:bg-orange-600'
+                              : 'bg-blue-500 hover:bg-blue-600'
+                        }`}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        <span>{buttonText}</span>
+                      </button>
+                    );
+                  })()
                 )}
                 
                 <button
