@@ -11,46 +11,34 @@ export const useChat = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Create a fallback user for testing when no real user is authenticated
-  const getCurrentUser = () => {
-    if (user) return user;
-    
-    // Fallback user for testing
+  const resolveIdentity = useCallback(async () => {
+    if (!user) return null;
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      throw new Error('User not authenticated');
+    }
+
     return {
-      id: '550e8400-e29b-41d4-a716-446655440000', // Use one of our test user IDs
-      name: 'Test User',
-      username: 'testuser',
-      email: 'alice.johnson@axiscolleges.in',
-      college: 'Axis Colleges',
-      branch: 'Computer Science',
-      year: 2023,
-      bio: 'Test user for chat functionality',
-      isVerified: true,
-      isAnonymous: false,
-      avatar: null,
-      skills: [],
-      achievements: [],
-      joinedAt: new Date(),
-      lastActive: new Date(),
+      authUserId: authData.user.id,
+      profileId: user.id,
     };
-  };
+  }, [user]);
 
   // Fetch user's conversations
   const fetchConversations = useCallback(async () => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
+    if (!user) return;
 
     setLoading(true);
     try {
-      // conversation_participants.user_id actually stores profile IDs, not user IDs
-      // So we can use currentUser.id directly
-      const profileId = currentUser.id;
+      const identity = await resolveIdentity();
+      if (!identity) return;
 
       // Simplified query to avoid complex relationships
       const { data: participantData, error } = await supabase
         .from('conversation_participants')
         .select('conversation_id, last_read_at')
-        .eq('user_id', profileId);
+        .eq('user_id', identity.authUserId);
 
       if (error) {
         console.error('Error fetching conversations:', error);
@@ -86,14 +74,14 @@ export const useChat = () => {
                 const { data: profileDataArray } = await supabase
                   .from('profiles')
                   .select('id, user_id, name, username, email, college, branch, year, avatar_url, is_online, last_seen')
-                  .eq('id', p.user_id)
+                  .eq('user_id', p.user_id)
                   .limit(1);
                 
                 const profileData = profileDataArray?.[0];
                 
                 if (profileData) {
                   participants.push({
-                    id: profileData.user_id,
+                    id: profileData.id,
                     name: profileData.name,
                     username: profileData.username || profileData.email?.split('@')[0] || profileData.name.toLowerCase().replace(/\s+/g, ''),
                     email: profileData.email,
@@ -129,13 +117,13 @@ export const useChat = () => {
               const { data: senderProfileData } = await supabase
                 .from('profiles')
                 .select('id, user_id, name, username, email, college, branch, year, avatar_url')
-                .eq('id', msg.sender_id)
+                .eq('user_id', msg.sender_id)
                 .limit(1);
               
               if (senderProfileData && senderProfileData.length > 0) {
                 const senderProfile = senderProfileData[0];
                 const sender = {
-                  id: senderProfile.user_id,
+                  id: senderProfile.id,
                   name: senderProfile.name,
                   username: senderProfile.username || senderProfile.email?.split('@')[0] || senderProfile.name.toLowerCase().replace(/\s+/g, ''),
                   email: senderProfile.email,
@@ -170,15 +158,7 @@ export const useChat = () => {
             }
 
             // Filter out the current user from participants to show only other users
-            // We need to get the actual user_id for filtering since participants have user_id in their id field
-            const { data: currentUserProfile } = await supabase
-              .from('profiles')
-              .select('user_id')
-              .eq('id', currentUser.id)
-              .limit(1);
-            
-            const currentUserId = currentUserProfile?.[0]?.user_id;
-            const otherParticipants = participants.filter(p => p.id !== currentUserId);
+            const otherParticipants = participants.filter(p => p.id !== identity.profileId);
 
             conversationMap.set(conversationId, {
               id: conversationId,
@@ -203,13 +183,11 @@ export const useChat = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resolveIdentity, user]);
 
   // Fetch participants for a specific conversation
   const fetchConversationParticipants = useCallback(async (conversationId: string) => {
-    const currentUser = getCurrentUser();
-    
-    if (!currentUser) return [];
+    if (!user) return [];
 
     try {
       // Get all participants for this conversation
@@ -228,14 +206,14 @@ export const useChat = () => {
         const { data: profileDataArray } = await supabase
           .from('profiles')
           .select('id, user_id, name, username, email, college, branch, year, avatar_url, is_online, last_seen')
-          .eq('id', p.user_id)
+          .eq('user_id', p.user_id)
           .limit(1);
         
         const profileData = profileDataArray?.[0];
         
         if (profileData) {
           participants.push({
-            id: profileData.user_id,
+            id: profileData.id,
             name: profileData.name,
             username: profileData.username || profileData.email?.split('@')[0] || profileData.name.toLowerCase().replace(/\s+/g, ''),
             email: profileData.email,
@@ -259,14 +237,14 @@ export const useChat = () => {
       console.error('Error fetching conversation participants:', err);
       return [];
     }
-  }, []);
+  }, [user]);
 
   // Create or get existing conversation with a user
   const startConversation = useCallback(async (otherUserId: string) => {
-    const currentUser = getCurrentUser();
-    console.log('🔍 startConversation called with:', { otherUserId, currentUser: currentUser?.id });
+    const identity = await resolveIdentity();
+    console.log('🔍 startConversation called with:', { otherUserId, currentUser: identity?.authUserId });
     
-    if (!currentUser) {
+    if (!identity) {
       console.log('❌ No current user found');
       return null;
     }
@@ -276,7 +254,7 @@ export const useChat = () => {
       const { data: existingConversation, error: checkError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', currentUser.id);
+        .eq('user_id', identity.authUserId);
 
       if (checkError) {
         console.log('❌ Error checking existing conversations:', checkError);
@@ -336,7 +314,7 @@ export const useChat = () => {
       const { error: participantsError } = await supabase
         .from('conversation_participants')
         .insert([
-          { conversation_id: newConversation.id, user_id: currentUser.id },
+          { conversation_id: newConversation.id, user_id: identity.authUserId },
           { conversation_id: newConversation.id, user_id: otherUserId },
         ]);
 
@@ -352,22 +330,21 @@ export const useChat = () => {
       setError(err instanceof Error ? err.message : 'Failed to start conversation');
       return null;
     }
-  }, []);
+  }, [resolveIdentity]);
 
   // Send a message
   const sendMessage = useCallback(async (conversationId: string, content: string, messageType: 'text' | 'image' | 'file' = 'text', fileUrl?: string, fileName?: string, fileType?: string) => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
+    if (!user) return;
 
     try {
-      // currentUser.id is already a profile ID, so use it directly
-      const profileId = currentUser.id;
+      const identity = await resolveIdentity();
+      if (!identity) return;
 
       const { data, error } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
-          sender_id: profileId, // Use profile ID directly
+          sender_id: identity.authUserId,
           content,
           message_type: messageType,
           file_url: fileUrl,
@@ -383,8 +360,8 @@ export const useChat = () => {
       const newMessage: Message = {
         id: data.id,
         conversationId: data.conversation_id,
-        senderId: data.sender_id,
-        sender: currentUser,
+        senderId: user.id,
+        sender: user,
         content: data.content,
         messageType: data.message_type as 'text' | 'image' | 'file',
         fileUrl: data.file_url,
@@ -400,12 +377,11 @@ export const useChat = () => {
       console.error('Error sending message:', err);
       setError(err instanceof Error ? err.message : 'Failed to send message');
     }
-  }, []);
+  }, [resolveIdentity, user]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId: string) => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
+    if (!user) return;
 
     setLoading(true);
     try {
@@ -439,7 +415,7 @@ export const useChat = () => {
           const { data: senderProfileData } = await supabase
             .from('profiles')
             .select('id, user_id, name, username, email, college, branch, year, avatar_url')
-            .eq('id', msg.sender_id)
+            .eq('user_id', msg.sender_id)
             .limit(1);
           
           const senderProfile = senderProfileData?.[0];
@@ -448,9 +424,9 @@ export const useChat = () => {
             formattedMessages.push({
               id: msg.id,
               conversationId: msg.conversation_id,
-              senderId: msg.sender_id,
+              senderId: senderProfile.id,
               sender: {
-                id: senderProfile.user_id, // Use user_id instead of profile id
+                id: senderProfile.id,
                 name: senderProfile.name,
                 username: senderProfile.username || senderProfile.email?.split('@')[0] || senderProfile.name.toLowerCase().replace(/\s+/g, ''),
                 email: senderProfile.email,
@@ -486,24 +462,26 @@ export const useChat = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Mark messages as read
   const markMessagesAsRead = useCallback(async (conversationId: string) => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
+    if (!user) return;
 
     try {
+      const identity = await resolveIdentity();
+      if (!identity) return;
+
       await supabase
         .from('messages')
         .update({ is_read: true })
         .eq('conversation_id', conversationId)
-        .neq('sender_id', currentUser.id);
+        .neq('sender_id', identity.authUserId);
 
       // Update local state
       setMessages(prev => 
         prev.map(msg => 
-          msg.conversationId === conversationId && msg.senderId !== currentUser.id
+          msg.conversationId === conversationId && msg.senderId !== user.id
             ? { ...msg, isRead: true }
             : msg
         )
@@ -511,12 +489,11 @@ export const useChat = () => {
     } catch (err) {
       console.error('Error marking messages as read:', err);
     }
-  }, []);
+  }, [resolveIdentity, user]);
 
   // Set up real-time subscriptions
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
+    if (!user) return;
 
     // Subscribe to new messages
     const messagesSubscription = supabase
@@ -542,7 +519,7 @@ export const useChat = () => {
                 const message: Message = {
                   id: newMessage.id,
                   conversationId: newMessage.conversation_id,
-                  senderId: newMessage.sender_id,
+                  senderId: profile.id,
                   sender: {
                     id: profile.id,
                     name: profile.name,

@@ -225,7 +225,7 @@ export const useStudyGroups = () => {
     };
   }, []);
 
-  const fetchJoinRequestData = useCallback(async (groups: StudyGroup[], currentAuthUserId: string, creatorCol: CreatorColumn) => {
+  const fetchJoinRequestData = useCallback(async (_groups: StudyGroup[], currentAuthUserId: string, creatorCol: CreatorColumn) => {
     try {
       const { data: myRequests, error: myRequestsError } = await supabase
         .from('study_group_join_requests')

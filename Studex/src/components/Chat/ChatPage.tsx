@@ -13,7 +13,7 @@ const ChatPage: React.FC = () => {
   React.useEffect(() => {
     console.log('🔍 ChatPage: Component mounted, fetching conversations...');
     chatHook.fetchConversations();
-  }, []);
+  }, [chatHook.fetchConversations]);
 
   const handleConversationSelect = (conversation: Conversation) => {
     setActiveConversation(conversation);

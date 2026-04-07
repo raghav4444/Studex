@@ -24,6 +24,7 @@ export const useUserSearch = () => {
         .from('profiles')
         .select(`
           id,
+          user_id,
           name,
           email,
           college,
@@ -42,7 +43,7 @@ export const useUserSearch = () => {
       console.log('Search results:', data);
 
       const results: ChatSearchResult[] = (data || []).map(profile => ({
-        id: profile.id, // Use id as the id (this is the user's auth ID)
+        id: profile.user_id,
         name: profile.name,
         username: profile.email?.split('@')[0] || profile.name.toLowerCase().replace(/\s+/g, ''),
         avatar: profile.avatar_url,
