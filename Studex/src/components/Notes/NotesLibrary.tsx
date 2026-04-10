@@ -7,6 +7,7 @@ const NotesLibrary: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [selectedSemester, setSelectedSemester] = useState('all');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   const [notes] = useState<Note[]>([
     {
@@ -146,8 +147,8 @@ const NotesLibrary: React.FC = () => {
               Notes Library
             </div>
 
-            <div className="space-y-4">
-              <h1 className="max-w-2xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
+            <div className="space-y-3 sm:space-y-4 flex-wrap">
+              <h1 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight text-white sm:text-5xl sm:leading-tight">
                 Find the notes that actually help you study faster.
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-gray-300 sm:text-lg sm:leading-7">
@@ -155,7 +156,7 @@ const NotesLibrary: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur sm:p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Notes</p>
                 <p className="mt-2 text-2xl font-semibold text-white leading-none">{noteStats.totalNotes}</p>
@@ -168,7 +169,7 @@ const NotesLibrary: React.FC = () => {
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Likes</p>
                 <p className="mt-2 text-2xl font-semibold text-white leading-none">{noteStats.totalLikes}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur sm:p-4 min-w-0">
+              <div className="col-span-2 rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur sm:col-span-1 sm:p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Newest</p>
                 <p className="mt-2 text-sm font-semibold leading-5 text-white line-clamp-2 break-words">
                   {noteStats.latestNote?.title}
@@ -189,9 +190,27 @@ const NotesLibrary: React.FC = () => {
                 Browse Collections
               </button>
             </div>
+
+            <div className="flex flex-wrap gap-2">
+              {subjects.slice(1).map((subject) => {
+                const count = notes.filter(note => note.subject === subject).length;
+                const active = selectedSubject === subject;
+
+                return (
+                  <button
+                    key={subject}
+                    onClick={() => setSelectedSubject(active ? 'all' : subject)}
+                    className={`shrink-0 rounded-full border px-4 py-2 text-sm transition-all ${active ? 'border-blue-400/40 bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20 hover:bg-white/10 hover:text-white'}`}
+                  >
+                    {subject}
+                    <span className="ml-2 rounded-full bg-black/15 px-2 py-0.5 text-xs">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="grid gap-4">
+          <div className="hidden gap-4 xl:grid">
             <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-4 backdrop-blur-xl sm:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -277,7 +296,7 @@ const NotesLibrary: React.FC = () => {
       )}
 
       {/* Search and Filters */}
-      <div className="mb-8 rounded-[1.75rem] border border-white/10 bg-[#161b22]/90 p-4 shadow-xl backdrop-blur sm:p-5">
+      <div className="mb-6 rounded-[1.75rem] border border-white/10 bg-[#161b22]/90 p-4 shadow-xl backdrop-blur sm:mb-8 sm:p-5">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_0.9fr_0.9fr_auto]">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -331,7 +350,11 @@ const NotesLibrary: React.FC = () => {
       {filteredNotes.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 sm:gap-6">
           {filteredNotes.map((note) => (
-            <article key={note.id} className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#161b22] p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/10 sm:p-6">
+            <article
+              key={note.id}
+              onClick={() => setSelectedNote(note)}
+              className="group relative cursor-pointer overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#161b22] p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/10 sm:rounded-[1.75rem] sm:p-6"
+            >
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-violet-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <div className="mb-4 flex items-start justify-between gap-3 sm:mb-5">
@@ -346,15 +369,23 @@ const NotesLibrary: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="mb-3 line-clamp-2 text-lg font-semibold text-white sm:text-xl">
+              <h3 className="mb-2 line-clamp-2 text-lg font-semibold text-white sm:mb-3 sm:text-xl">
                 {note.title}
               </h3>
 
-              <p className="mb-4 text-sm leading-6 text-gray-400 sm:mb-5">
+              <p className="mb-4 line-clamp-2 text-sm leading-6 text-gray-400 sm:mb-5 sm:line-clamp-none">
                 Carefully organized note set ready for review, revision, and quick downloads.
               </p>
 
-              <div className="mb-4 grid grid-cols-1 gap-3 text-sm sm:mb-5 sm:grid-cols-2">
+              <div className="mb-4 flex flex-wrap gap-2">
+                {note.tags.slice(0, 3).map((tag) => (
+                  <span key={tag} className="rounded-full border border-blue-400/15 bg-blue-500/10 px-3 py-1 text-xs text-blue-200">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mb-4 grid grid-cols-2 gap-2 text-sm sm:mb-5 sm:gap-3">
                 <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Uploaded by</p>
                   <p className="mt-2 truncate text-sm font-medium text-white">{note.uploadedBy.name}</p>
@@ -384,7 +415,13 @@ const NotesLibrary: React.FC = () => {
                     <Heart className="h-4 w-4" />
                     Like
                   </button>
-                  <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-gray-200 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white">
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelectedNote(note);
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-gray-200 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  >
                     <Eye className="h-4 w-4" />
                     Preview
                   </button>
@@ -413,6 +450,83 @@ const NotesLibrary: React.FC = () => {
             Reset filters
             <ArrowRight className="h-4 w-4" />
           </button>
+        </div>
+      )}
+
+      {selectedNote && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#0d1117] shadow-2xl">
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-600/20 via-[#111827] to-[#161b22] p-5 sm:p-6">
+              <button
+                onClick={() => setSelectedNote(null)}
+                className="absolute right-4 top-4 rounded-full border border-white/10 bg-black/30 p-2 text-white/80 transition-colors hover:bg-black/50 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <div className="flex items-start gap-4 pr-10">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/10">
+                  <BookOpen className="h-7 w-7" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="inline-flex rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/80">
+                    {selectedNote.subject}
+                  </span>
+                  <h3 className="mt-3 text-2xl font-semibold leading-tight text-white sm:text-3xl">
+                    {selectedNote.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-300">
+                    {selectedNote.semester} · {selectedNote.fileName}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-5 p-5 sm:p-6">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Size</p>
+                  <p className="mt-2 text-sm font-medium text-white">{formatFileSize(selectedNote.fileSize)}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Downloads</p>
+                  <p className="mt-2 text-sm font-medium text-white">{selectedNote.downloads}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Likes</p>
+                  <p className="mt-2 text-sm font-medium text-white">{selectedNote.likes || 0}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Uploader</p>
+                  <p className="mt-2 truncate text-sm font-medium text-white">{selectedNote.uploadedBy.name}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {selectedNote.tags.map((tag) => (
+                  <span key={tag} className="rounded-full border border-blue-400/15 bg-blue-500/10 px-3 py-1 text-xs text-blue-200">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+
+              <p className="text-sm leading-6 text-gray-300">
+                This note preview is optimized for quick mobile browsing. Tap download to get the file or use the preview details to decide whether it matches your study session.
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-transform hover:-translate-y-0.5">
+                  <Download className="h-4 w-4" />
+                  Download Note
+                </button>
+                <button
+                  onClick={() => setSelectedNote(null)}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/10"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
