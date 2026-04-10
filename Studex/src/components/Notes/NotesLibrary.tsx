@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Upload, Download, BookOpen, Filter, Heart, Star, Eye } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Search, Upload, Download, BookOpen, Filter, Heart, Eye, Sparkles, TrendingUp, Clock3, FileText, BadgeInfo, ArrowRight, Layers3, X } from 'lucide-react';
 import { Note } from '../../types';
 
 const NotesLibrary: React.FC = () => {
@@ -19,16 +19,20 @@ const NotesLibrary: React.FC = () => {
       fileName: 'DSA_Complete_Notes.pdf',
       fileSize: 2048576,
       downloads: 45,
+      likes: 18,
+      tags: ['DSA', 'Algorithms', 'Interview Prep'],
       uploadedBy: {
         id: '1',
         name: 'Sarah Chen',
+        username: 'sarahchen',
         email: 'sarah@mit.edu',
         college: 'MIT',
         branch: 'Computer Science',
         year: 3,
         isVerified: true,
         isAnonymous: false,
-        createdAt: new Date(),
+        joinedAt: new Date(),
+        lastActive: new Date(),
       },
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     },
@@ -42,16 +46,20 @@ const NotesLibrary: React.FC = () => {
       fileName: 'Thermodynamics_Notes.pdf',
       fileSize: 1536000,
       downloads: 23,
+      likes: 11,
+      tags: ['Thermodynamics', 'ME', 'Formulas'],
       uploadedBy: {
         id: '2',
         name: 'Mike Johnson',
+        username: 'mikejohnson',
         email: 'mike@stanford.edu',
         college: 'Stanford University',
         branch: 'Mechanical Engineering',
         year: 4,
         isVerified: true,
         isAnonymous: false,
-        createdAt: new Date(),
+        joinedAt: new Date(),
+        lastActive: new Date(),
       },
       createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     },
@@ -65,16 +73,20 @@ const NotesLibrary: React.FC = () => {
       fileName: 'Quantum_Mechanics_Problems.pdf',
       fileSize: 3072000,
       downloads: 67,
+      likes: 29,
+      tags: ['Quantum Mechanics', 'Physics', 'Problems'],
       uploadedBy: {
         id: '3',
         name: 'Alex Rodriguez',
+        username: 'alexrodriguez',
         email: 'alex@caltech.edu',
         college: 'Caltech',
         branch: 'Physics',
         year: 4,
         isVerified: true,
         isAnonymous: false,
-        createdAt: new Date(),
+        joinedAt: new Date(),
+        lastActive: new Date(),
       },
       createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     },
@@ -92,6 +104,26 @@ const NotesLibrary: React.FC = () => {
     return matchesSearch && matchesSubject && matchesSemester;
   });
 
+  const noteStats = useMemo(() => {
+    const totalDownloads = notes.reduce((sum, note) => sum + note.downloads, 0);
+    const totalLikes = notes.reduce((sum, note) => sum + (note.likes || 0), 0);
+    const latestNote = [...notes].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+
+    return {
+      totalNotes: notes.length,
+      totalDownloads,
+      totalLikes,
+      latestNote,
+    };
+  }, [notes]);
+
+  const subjectChips = useMemo(() => (
+    subjects.filter(subject => subject !== 'all').map(subject => ({
+      label: subject,
+      count: notes.filter(note => note.subject === subject).length,
+    }))
+  ), [notes]);
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -101,42 +133,169 @@ const NotesLibrary: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Notes Library</h1>
-          <p className="text-gray-400">Access and share study materials with your peers</p>
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#0b1020] via-[#0d1117] to-[#161b22] shadow-[0_24px_80px_rgba(0,0,0,0.45)] mb-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.22),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.18),transparent_28%)]" />
+        <div className="absolute -top-24 right-0 h-56 w-56 rounded-full bg-blue-500/15 blur-3xl" />
+        <div className="absolute -bottom-20 left-12 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
+
+        <div className="relative grid gap-6 p-6 md:p-8 xl:grid-cols-[1.4fr_0.9fr] xl:gap-8">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-200">
+              <Sparkles className="h-4 w-4" />
+              Notes Library
+            </div>
+
+            <div className="space-y-4">
+              <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                Find the notes that actually help you study faster.
+              </h1>
+              <p className="max-w-2xl text-base leading-7 text-gray-300 sm:text-lg">
+                Browse curated study materials, jump between subjects, and grab high-signal notes without digging through clutter.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Notes</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{noteStats.totalNotes}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Downloads</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{noteStats.totalDownloads}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Likes</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{noteStats.totalLikes}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Newest</p>
+                <p className="mt-2 text-sm font-semibold text-white line-clamp-2">
+                  {noteStats.latestNote?.title}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setIsUploadOpen(true)}
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-blue-100"
+              >
+                <Upload className="h-4 w-4" />
+                Upload Notes
+              </button>
+              <button className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:border-white/25 hover:bg-white/10">
+                <Layers3 className="h-4 w-4" />
+                Browse Collections
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5 backdrop-blur-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Featured collection</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-white">Top study picks</h2>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-300">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {notes.slice(0, 3).map((note, index) => (
+                  <div key={note.id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/5 p-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-400/10 text-blue-300">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-white">{note.title}</p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                        <span>{note.subject}</span>
+                        <span>•</span>
+                        <span>{note.downloads} downloads</span>
+                      </div>
+                    </div>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300">
+                      {index + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                <BadgeInfo className="h-4 w-4 text-blue-300" />
+                Quick filters
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {subjectChips.map((chip) => (
+                  <button
+                    key={chip.label}
+                    onClick={() => setSelectedSubject(chip.label)}
+                    className={`rounded-full px-3 py-2 text-sm transition-colors ${selectedSubject === chip.label ? 'bg-blue-500 text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'}`}
+                  >
+                    {chip.label} <span className="ml-1 text-xs opacity-70">{chip.count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-        
-        <button
-          onClick={() => setIsUploadOpen(true)}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200"
-        >
-          <Upload className="w-4 h-4" />
-          <span>Upload Notes</span>
-        </button>
       </div>
 
+      {isUploadOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[1.75rem] border border-white/10 bg-[#161b22] p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-300">Upload Notes</p>
+                <h3 className="mt-1 text-2xl font-semibold text-white">Coming next</h3>
+              </div>
+              <button
+                onClick={() => setIsUploadOpen(false)}
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-white/5 p-5 text-sm leading-6 text-gray-300">
+              The upload workflow is not wired to storage yet, so this UI now keeps the action visible without leaving the button dead.
+            </div>
+
+            <button
+              onClick={() => setIsUploadOpen(false)}
+              className="mt-5 w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition-transform hover:-translate-y-0.5"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Search and Filters */}
-      <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-8 rounded-[1.75rem] border border-white/10 bg-[#161b22]/90 p-5 shadow-xl backdrop-blur">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_0.9fr_0.9fr_auto]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search notes..."
-              className="w-full pl-10 pr-4 py-3 bg-[#0d1117] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+              placeholder="Search notes, subjects, or topics..."
+              className="w-full rounded-2xl border border-white/10 bg-[#0d1117] pl-12 pr-4 py-3.5 text-white placeholder-gray-500 outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Filter className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <select
               value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-[#0d1117] border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all appearance-none"
+              className="w-full appearance-none rounded-2xl border border-white/10 bg-[#0d1117] py-3.5 pl-12 pr-4 text-white outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
             >
               {subjects.map(subject => (
                 <option key={subject} value={subject}>
@@ -147,11 +306,11 @@ const NotesLibrary: React.FC = () => {
           </div>
 
           <div className="relative">
-            <BookOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <BookOpen className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <select
               value={selectedSemester}
               onChange={(e) => setSelectedSemester(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-[#0d1117] border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all appearance-none"
+              className="w-full appearance-none rounded-2xl border border-white/10 bg-[#0d1117] py-3.5 pl-12 pr-4 text-white outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
             >
               {semesters.map(semester => (
                 <option key={semester} value={semester}>
@@ -160,103 +319,100 @@ const NotesLibrary: React.FC = () => {
               ))}
             </select>
           </div>
-        </div>
-      </div>
 
-      {/* Featured Notes Section */}
-      <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 mb-8">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-          <Star className="w-5 h-5 text-yellow-400" />
-          <span>Featured Notes</span>
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {notes.slice(0, 2).map((note) => (
-            <div key={note.id} className="flex items-center space-x-4 p-4 bg-[#0d1117] rounded-lg border border-gray-700">
-              <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-yellow-400" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-white line-clamp-1">{note.title}</h4>
-                <p className="text-sm text-gray-400">{note.subject} • {note.downloads} downloads</p>
-              </div>
-              <button className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-all duration-200">
-                View
-              </button>
-            </div>
-          ))}
+          <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-medium text-white transition-colors hover:border-white/20 hover:bg-white/10">
+            <Clock3 className="h-4 w-4" />
+            Recent
+          </button>
         </div>
       </div>
 
       {/* Notes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredNotes.map((note) => (
-          <div key={note.id} className="bg-[#161b22] rounded-lg p-6 border border-gray-800 hover:border-gray-700 transition-all duration-200">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-blue-400" />
-              </div>
-              <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded-full">
-                {note.subject}
-              </span>
-            </div>
+      {filteredNotes.length > 0 ? (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {filteredNotes.map((note) => (
+            <article key={note.id} className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#161b22] p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/10">
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-violet-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-            <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
-              {note.title}
-            </h3>
+              <div className="mb-5 flex items-start justify-between gap-3">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-400/10 text-blue-300 ring-1 ring-white/5 transition-transform duration-300 group-hover:scale-105">
+                  <BookOpen className="h-7 w-7" />
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300">
+                    {note.subject}
+                  </span>
+                  <span className="text-xs text-gray-500">{note.semester}</span>
+                </div>
+              </div>
 
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Uploaded by</span>
-                <span className="text-gray-300">{note.uploadedBy.name}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Semester</span>
-                <span className="text-gray-300">{note.semester}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Size</span>
-                <span className="text-gray-300">{formatFileSize(note.fileSize)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Downloads</span>
-                <span className="text-gray-300">{note.downloads}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Likes</span>
-                <span className="text-gray-300">{note.likes || 0}</span>
-              </div>
-            </div>
+              <h3 className="mb-3 line-clamp-2 text-xl font-semibold text-white">
+                {note.title}
+              </h3>
 
-            <div className="space-y-2">
-              <button className="w-full flex items-center justify-center space-x-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200">
-                <Download className="w-4 h-4" />
-                <span>Download</span>
-              </button>
-              
-              <div className="flex items-center space-x-2">
-                <button className="flex-1 flex items-center justify-center space-x-2 py-2 border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white rounded-lg transition-all duration-200">
-                  <Heart className="w-4 h-4" />
-                  <span>Like</span>
+              <p className="mb-5 text-sm leading-6 text-gray-400">
+                Carefully organized note set ready for review, revision, and quick downloads.
+              </p>
+
+              <div className="mb-5 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Uploaded by</p>
+                  <p className="mt-2 truncate text-sm font-medium text-white">{note.uploadedBy.name}</p>
+                </div>
+                <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Size</p>
+                  <p className="mt-2 text-sm font-medium text-white">{formatFileSize(note.fileSize)}</p>
+                </div>
+                <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Downloads</p>
+                  <p className="mt-2 text-sm font-medium text-white">{note.downloads}</p>
+                </div>
+                <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Likes</p>
+                  <p className="mt-2 text-sm font-medium text-white">{note.likes || 0}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-blue-100">
+                  <Download className="h-4 w-4" />
+                  Download
                 </button>
-                
-                <button className="flex-1 flex items-center justify-center space-x-2 py-2 border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white rounded-lg transition-all duration-200">
-                  <Eye className="w-4 h-4" />
-                  <span>Preview</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      {filteredNotes.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <BookOpen className="w-8 h-8 text-gray-500" />
+                <div className="grid grid-cols-2 gap-3">
+                  <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-gray-200 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white">
+                    <Heart className="h-4 w-4" />
+                    Like
+                  </button>
+                  <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-gray-200 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white">
+                    <Eye className="h-4 w-4" />
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-[1.75rem] border border-white/10 bg-[#161b22] py-16 text-center shadow-lg">
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/5 text-gray-400">
+            <BookOpen className="h-10 w-10" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">No notes found</h3>
-          <p className="text-gray-400">Try adjusting your search or filters</p>
+          <h3 className="text-2xl font-semibold text-white">No notes found</h3>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-gray-400">
+            Try a different search term or clear the filters to bring the library back into view.
+          </p>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedSubject('all');
+              setSelectedSemester('all');
+            }}
+            className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-transform hover:-translate-y-0.5"
+          >
+            Reset filters
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>
