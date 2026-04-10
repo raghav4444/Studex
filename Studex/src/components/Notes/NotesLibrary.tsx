@@ -133,58 +133,58 @@ const NotesLibrary: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
       <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#0b1020] via-[#0d1117] to-[#161b22] shadow-[0_24px_80px_rgba(0,0,0,0.45)] mb-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.22),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.18),transparent_28%)]" />
         <div className="absolute -top-24 right-0 h-56 w-56 rounded-full bg-blue-500/15 blur-3xl" />
         <div className="absolute -bottom-20 left-12 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
 
-        <div className="relative grid gap-6 p-6 md:p-8 xl:grid-cols-[1.4fr_0.9fr] xl:gap-8">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-200">
+        <div className="relative grid gap-5 p-4 sm:p-6 md:p-8 xl:grid-cols-[1.4fr_0.9fr] xl:gap-8">
+          <div className="space-y-5 sm:space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-200 sm:px-4 sm:py-2 sm:text-sm">
               <Sparkles className="h-4 w-4" />
               Notes Library
             </div>
 
             <div className="space-y-4">
-              <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-white sm:text-5xl">
+              <h1 className="max-w-2xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
                 Find the notes that actually help you study faster.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-gray-300 sm:text-lg">
+              <p className="max-w-2xl text-sm leading-6 text-gray-300 sm:text-lg sm:leading-7">
                 Browse curated study materials, jump between subjects, and grab high-signal notes without digging through clutter.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur sm:p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Notes</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{noteStats.totalNotes}</p>
+                <p className="mt-2 text-2xl font-semibold text-white leading-none">{noteStats.totalNotes}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur sm:p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Downloads</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{noteStats.totalDownloads}</p>
+                <p className="mt-2 text-2xl font-semibold text-white leading-none">{noteStats.totalDownloads}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur sm:p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Likes</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{noteStats.totalLikes}</p>
+                <p className="mt-2 text-2xl font-semibold text-white leading-none">{noteStats.totalLikes}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur sm:p-4 min-w-0">
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Newest</p>
-                <p className="mt-2 text-sm font-semibold text-white line-clamp-2">
+                <p className="mt-2 text-sm font-semibold leading-5 text-white line-clamp-2 break-words">
                   {noteStats.latestNote?.title}
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button
                 onClick={() => setIsUploadOpen(true)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-blue-100"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-blue-100 sm:w-auto"
               >
                 <Upload className="h-4 w-4" />
                 Upload Notes
               </button>
-              <button className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:border-white/25 hover:bg-white/10">
+              <button className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:border-white/25 hover:bg-white/10 sm:w-auto">
                 <Layers3 className="h-4 w-4" />
                 Browse Collections
               </button>
@@ -192,26 +192,26 @@ const NotesLibrary: React.FC = () => {
           </div>
 
           <div className="grid gap-4">
-            <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-5 backdrop-blur-xl">
-              <div className="flex items-center justify-between">
+            <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-4 backdrop-blur-xl sm:p-5">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm text-gray-400">Featured collection</p>
-                  <h2 className="mt-1 text-2xl font-semibold text-white">Top study picks</h2>
+                  <p className="text-xs uppercase tracking-[0.18em] text-gray-400 sm:text-sm sm:normal-case sm:tracking-normal">Featured collection</p>
+                  <h2 className="mt-1 text-xl font-semibold text-white sm:text-2xl">Top study picks</h2>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-300">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-300 sm:h-12 sm:w-12">
                   <TrendingUp className="h-6 w-6" />
                 </div>
               </div>
 
-              <div className="mt-5 space-y-3">
+              <div className="mt-4 space-y-3 sm:mt-5">
                 {notes.slice(0, 3).map((note, index) => (
-                  <div key={note.id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/5 p-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-400/10 text-blue-300">
+                  <div key={note.id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/5 p-3 sm:p-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-400/10 text-blue-300 sm:h-11 sm:w-11">
                       <FileText className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-white">{note.title}</p>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                      <p className="truncate text-sm font-medium text-white sm:text-sm">{note.title}</p>
+                      <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-400 sm:text-xs">
                         <span>{note.subject}</span>
                         <span>•</span>
                         <span>{note.downloads} downloads</span>
@@ -225,7 +225,7 @@ const NotesLibrary: React.FC = () => {
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:p-5">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-300">
                 <BadgeInfo className="h-4 w-4 text-blue-300" />
                 Quick filters
@@ -277,7 +277,7 @@ const NotesLibrary: React.FC = () => {
       )}
 
       {/* Search and Filters */}
-      <div className="mb-8 rounded-[1.75rem] border border-white/10 bg-[#161b22]/90 p-5 shadow-xl backdrop-blur">
+      <div className="mb-8 rounded-[1.75rem] border border-white/10 bg-[#161b22]/90 p-4 shadow-xl backdrop-blur sm:p-5">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_0.9fr_0.9fr_auto]">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -286,7 +286,7 @@ const NotesLibrary: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search notes, subjects, or topics..."
-              className="w-full rounded-2xl border border-white/10 bg-[#0d1117] pl-12 pr-4 py-3.5 text-white placeholder-gray-500 outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-2xl border border-white/10 bg-[#0d1117] pl-12 pr-4 py-3 text-white placeholder-gray-500 outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 sm:py-3.5"
             />
           </div>
 
@@ -295,7 +295,7 @@ const NotesLibrary: React.FC = () => {
             <select
               value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full appearance-none rounded-2xl border border-white/10 bg-[#0d1117] py-3.5 pl-12 pr-4 text-white outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full appearance-none rounded-2xl border border-white/10 bg-[#0d1117] py-3 pl-12 pr-4 text-white outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 sm:py-3.5"
             >
               {subjects.map(subject => (
                 <option key={subject} value={subject}>
@@ -310,7 +310,7 @@ const NotesLibrary: React.FC = () => {
             <select
               value={selectedSemester}
               onChange={(e) => setSelectedSemester(e.target.value)}
-              className="w-full appearance-none rounded-2xl border border-white/10 bg-[#0d1117] py-3.5 pl-12 pr-4 text-white outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full appearance-none rounded-2xl border border-white/10 bg-[#0d1117] py-3 pl-12 pr-4 text-white outline-none transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 sm:py-3.5"
             >
               {semesters.map(semester => (
                 <option key={semester} value={semester}>
@@ -320,7 +320,7 @@ const NotesLibrary: React.FC = () => {
             </select>
           </div>
 
-          <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-medium text-white transition-colors hover:border-white/20 hover:bg-white/10">
+          <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition-colors hover:border-white/20 hover:bg-white/10 sm:py-3.5">
             <Clock3 className="h-4 w-4" />
             Recent
           </button>
@@ -329,46 +329,46 @@ const NotesLibrary: React.FC = () => {
 
       {/* Notes Grid */}
       {filteredNotes.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 sm:gap-6">
           {filteredNotes.map((note) => (
-            <article key={note.id} className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#161b22] p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/10">
+            <article key={note.id} className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#161b22] p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/10 sm:p-6">
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-violet-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-              <div className="mb-5 flex items-start justify-between gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-400/10 text-blue-300 ring-1 ring-white/5 transition-transform duration-300 group-hover:scale-105">
-                  <BookOpen className="h-7 w-7" />
+              <div className="mb-4 flex items-start justify-between gap-3 sm:mb-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-400/10 text-blue-300 ring-1 ring-white/5 transition-transform duration-300 group-hover:scale-105 sm:h-14 sm:w-14">
+                  <BookOpen className="h-6 w-6 sm:h-7 sm:w-7" />
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-gray-300 sm:px-3 sm:text-xs">
                     {note.subject}
                   </span>
                   <span className="text-xs text-gray-500">{note.semester}</span>
                 </div>
               </div>
 
-              <h3 className="mb-3 line-clamp-2 text-xl font-semibold text-white">
+              <h3 className="mb-3 line-clamp-2 text-lg font-semibold text-white sm:text-xl">
                 {note.title}
               </h3>
 
-              <p className="mb-5 text-sm leading-6 text-gray-400">
+              <p className="mb-4 text-sm leading-6 text-gray-400 sm:mb-5">
                 Carefully organized note set ready for review, revision, and quick downloads.
               </p>
 
-              <div className="mb-5 grid grid-cols-2 gap-3 text-sm">
+              <div className="mb-4 grid grid-cols-1 gap-3 text-sm sm:mb-5 sm:grid-cols-2">
                 <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
-                  <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Uploaded by</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Uploaded by</p>
                   <p className="mt-2 truncate text-sm font-medium text-white">{note.uploadedBy.name}</p>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
-                  <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Size</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Size</p>
                   <p className="mt-2 text-sm font-medium text-white">{formatFileSize(note.fileSize)}</p>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
-                  <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Downloads</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Downloads</p>
                   <p className="mt-2 text-sm font-medium text-white">{note.downloads}</p>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
-                  <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Likes</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Likes</p>
                   <p className="mt-2 text-sm font-medium text-white">{note.likes || 0}</p>
                 </div>
               </div>
@@ -379,7 +379,7 @@ const NotesLibrary: React.FC = () => {
                   Download
                 </button>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-gray-200 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white">
                     <Heart className="h-4 w-4" />
                     Like
@@ -394,11 +394,11 @@ const NotesLibrary: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="rounded-[1.75rem] border border-white/10 bg-[#161b22] py-16 text-center shadow-lg">
-          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/5 text-gray-400">
+        <div className="rounded-[1.75rem] border border-white/10 bg-[#161b22] px-5 py-14 text-center shadow-lg sm:px-8 sm:py-16">
+          <div className="mx-auto mb-5 flex h-18 w-18 items-center justify-center rounded-3xl bg-white/5 text-gray-400 sm:h-20 sm:w-20">
             <BookOpen className="h-10 w-10" />
           </div>
-          <h3 className="text-2xl font-semibold text-white">No notes found</h3>
+          <h3 className="text-xl font-semibold text-white sm:text-2xl">No notes found</h3>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-gray-400">
             Try a different search term or clear the filters to bring the library back into view.
           </p>
